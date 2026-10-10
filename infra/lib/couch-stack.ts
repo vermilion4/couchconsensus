@@ -20,6 +20,8 @@ export interface CouchStackProps extends StackProps {
   bedrockModelId: string;
   /** "on" to call Bedrock; "off" keeps the rule-based deck and template reasons (AI-3). */
   aiMode: 'on' | 'off';
+  /** false = no CloudFront (e.g. while a new account awaits CloudFront verification); ALB only, HTTP. */
+  cdn: boolean;
 }
 
 export class CouchStack extends Stack {
@@ -85,6 +87,10 @@ export class CouchStack extends Stack {
       }),
     );
 
+    new CfnOutput(this, 'AlbUrl', {value: `http://${service.loadBalancer.loadBalancerDnsName}`});
+    new CfnOutput(this, 'TableName', {value: table.tableName});
+    if (!props.cdn) return;
+
     // ---------- CloudFront: HTTPS/WSS on *.cloudfront.net, viewer country (ADR-0002, ADR-0009) ----------
     const albOrigin = new origins.LoadBalancerV2Origin(service.loadBalancer, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
@@ -112,7 +118,5 @@ export class CouchStack extends Stack {
     });
 
     new CfnOutput(this, 'PublicUrl', {value: `https://${distribution.distributionDomainName}`});
-    new CfnOutput(this, 'AlbUrl', {value: `http://${service.loadBalancer.loadBalancerDnsName}`});
-    new CfnOutput(this, 'TableName', {value: table.tableName});
   }
 }

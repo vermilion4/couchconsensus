@@ -46,7 +46,7 @@ export async function buildApp(config: Config, rooms = new RoomManager()): Promi
     req.log.info({roomCode: room.code, region: room.region}, 'room created');
     return {
       roomCode: room.code,
-      joinUrl: `${config.publicBaseUrl}/r/${room.code}`,
+      joinUrl: `${config.publicBaseUrl ?? requestOrigin(req.headers)}/r/${room.code}`,
       hostToken,
       region: room.region,
     };
@@ -116,4 +116,11 @@ export async function buildApp(config: Config, rooms = new RoomManager()): Promi
   }
 
   return app;
+}
+
+/** Public origin as the viewer saw it. CloudFront forwards the viewer Host and CloudFront-Forwarded-Proto. */
+function requestOrigin(headers: Record<string, string | string[] | undefined>): string {
+  const first = (h: string | string[] | undefined) => (Array.isArray(h) ? h[0] : h)?.split(',')[0]?.trim();
+  const proto = first(headers['cloudfront-forwarded-proto']) ?? first(headers['x-forwarded-proto']) ?? 'https';
+  return `${proto}://${first(headers.host) ?? 'localhost'}`;
 }

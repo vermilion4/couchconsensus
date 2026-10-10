@@ -32,6 +32,18 @@ describe('session service skeleton', () => {
     expect(body.region).toBe('US');
   });
 
+  it('derives the join URL from the viewer host when no public base URL is configured', async () => {
+    const prod = await buildApp(loadConfig({NODE_ENV: 'production', PHONE_DIST_DIR: '/nonexistent', LOG_LEVEL: 'silent'}));
+    const res = await prod.inject({
+      method: 'POST',
+      url: '/api/rooms',
+      headers: {host: 'd1234.cloudfront.net', 'cloudfront-forwarded-proto': 'https'},
+      payload: {clientInstallId: 'install-12345678'},
+    });
+    expect(res.json().joinUrl).toMatch(/^https:\/\/d1234\.cloudfront\.net\/r\/[A-Z]{4}$/);
+    await prod.close();
+  });
+
   it('uses the CloudFront viewer country as the region', async () => {
     const res = await app.inject({
       method: 'POST',

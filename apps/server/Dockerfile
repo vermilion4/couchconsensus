@@ -13,14 +13,10 @@ RUN pnpm --filter @couch/phone build && pnpm --filter @couch/server build
 FROM node:22-slim
 ENV NODE_ENV=production
 WORKDIR /app
-RUN corepack enable
-COPY --from=build /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/.npmrc ./
-COPY --from=build /repo/apps/server/package.json ./apps/server/package.json
-COPY --from=build /repo/packages ./packages
-RUN pnpm install --frozen-lockfile --prod --filter @couch/server...
+# The server is a single bundled file (tsup bundles every dependency); no node_modules needed.
 COPY --from=build /repo/apps/server/dist ./apps/server/dist
 COPY --from=build /repo/apps/phone/dist ./apps/phone/dist
 ENV PHONE_DIST_DIR=/app/apps/phone/dist
 EXPOSE 8080
 USER node
-CMD ["node", "apps/server/dist/index.js"]
+CMD ["node", "--enable-source-maps", "apps/server/dist/index.js"]
