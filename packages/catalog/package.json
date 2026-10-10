@@ -1,0 +1,16 @@
+{
+  "name": "@couch/catalog",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Catalog schema and the demo deck of invented films (DATA_MODEL §7, SV-6).",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@couch/protocol": "workspace:*",
+    "zod": "^4"
+  }
+}

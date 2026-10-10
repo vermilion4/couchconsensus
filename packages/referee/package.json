@@ -1,0 +1,11 @@
+{
+  "name": "@couch/referee",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pure, deterministic ranking engine (ADR-0007). No I/O.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": { "typecheck": "tsc -p ." },
+  "dependencies": { "@couch/protocol": "workspace:*" }
+}

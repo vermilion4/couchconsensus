@@ -1,0 +1,48 @@
+:root {
+  /* Mirrors @couch/theme (Figma: Foundations). */
+  --bg: #0e1626;      /* night */
+  --surface: #1a2740; /* couch */
+  --raised: #25365a;  /* cushion */
+  --fg: #f7f1e8;      /* glow */
+  --muted: #9aa8bf;   /* mist */
+  --accent: #fc4c02;  /* fire orange */
+  --accent-text: #ff8a4c; /* ember: small orange text */
+  --error: #ff8a80;
+  color-scheme: dark;
+  font-family: Figtree, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+.screen {
+  min-height: 100dvh;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+h1 { font-family: 'Bricolage Grotesque', Figtree, system-ui, sans-serif; font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -0.01em; margin: 0; }
+.code { color: var(--accent-text); font-weight: 700; margin: 0; }
+form { display: flex; flex-direction: column; gap: 12px; }
+input {
+  font-size: 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--raised);
+  background: var(--surface);
+  color: var(--fg);
+}
+input:focus { outline: none; border-color: var(--accent); }
+button {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--bg);
+}
+button:disabled { opacity: 0.6; }
+.error { color: var(--error); }
+.hint { color: var(--muted); font-size: 14px; }

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mode": "demo",
+  "generatedAt": "2026-10-10",
+  "services": [
+    { "id": "demo:streamco", "name": "StreamCo", "regions": ["ZZ"] },
+    { "id": "demo:flixbox", "name": "FlixBox", "regions": ["ZZ"] },
+    { "id": "demo:reelhub", "name": "ReelHub", "regions": ["ZZ"] }
+  ],
+  "titles": [
+    { "id": "demo:0001", "kind": "film", "title": "The Last Lighthouse Keeper", "year": 2019, "runtimeMin": 104, "genres": ["drama", "mystery"], "tags": ["slow-burn", "small-town"], "logline": "A keeper on a fog-bound island starts receiving letters from a ship that sank a century ago.", "adult": false, "popularity": 61, "posterPath": "/art/demo-0001.webp", "availability": { "ZZ": [{ "serviceId": "demo:streamco", "type": "subscription" }] } },
+    { "id": "demo:0002", "kind": "film", "title": "Pancake Heist", "year": 2022, "runtimeMin": 92, "genres": ["comedy", "crime"], "tags": ["heist", "feel-good"], "logline": "Four diner regulars plan to steal a secret batter recipe before the chain buys their town.", "adult": false, "popularity": 74, "posterPath": "/art/demo-0002.webp", "availability": { "ZZ": [{ "serviceId": "demo:flixbox", "type": "subscription" }] } },
+    { "id": "demo:0003", "kind": "film", "title": "Orbit of Small Things", "year": 2017, "runtimeMin": 131, "genres": ["scienceFiction", "drama"], "tags": ["space", "found-family"], "logline": "A repair crew on a failing space station adopts the AI nobody else wants to talk to.", "adult": false, "popularity": 68, "posterPath": "/art/demo-0003.webp", "availability": { "ZZ": [{ "serviceId": "demo:reelhub", "type": "subscription" }] } },
+    { "id": "demo:0004", "kind": "film", "title": "Paper Lanterns", "year": 2021, "runtimeMin": 88, "genres": ["animation", "family"], "tags": ["cozy", "musical"], "logline": "A shy paper lantern floats away from the festival and has one night to find its way home.", "adult": false, "popularity": 80, "posterPath": "/art/demo-0004.webp", "availability": { "ZZ": [{ "serviceId": "demo:streamco", "type": "subscription" }, { "serviceId": "demo:flixbox", "type": "rent" }] } },
+    { "id": "demo:0005", "kind": "film", "title": "Midnight at Hollow Farm", "year": 2015, "runtimeMin": 97, "genres": ["horror", "thriller"], "tags": ["twisty", "small-town"], "logline": "A family inherits a farm where the scarecrows face a different way every morning.", "adult": false, "popularity": 57, "posterPath": "/art/demo-0005.webp", "availability": { "ZZ": [{ "serviceId": "demo:reelhub", "type": "subscription" }] } },
+    { "id": "demo:0006", "kind": "film", "title": "Second Serve", "year": 2023, "runtimeMin": 112, "genres": ["romance", "comedy"], "tags": ["feel-good", "road-trip"], "logline": "Two rival tennis coaches share a van across the country to reach the same tournament.", "adult": false, "popularity": 66, "posterPath": "/art/demo-0006.webp", "availability": { "ZZ": [{ "serviceId": "demo:flixbox", "type": "subscription" }] } }
+  ]
+}

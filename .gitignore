@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+coverage/
+cdk.out/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+*.vpkg
+buildinfo.json
+spikes/**/node_modules/
+spikes/**/build/
+spikes/s3-bedrock/results*.json
+# CDK lookup cache; contains the AWS account id
+infra/cdk.context.json
+.venv/

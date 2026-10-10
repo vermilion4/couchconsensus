@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+  - infra
+
+# One esbuild for tsx, tsup and Vite: with node-linker=hoisted, mixed versions
+# load a mismatched native binary ("Host version … does not match binary version …").
+overrides:
+  esbuild: ^0.28.2

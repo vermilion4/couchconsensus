@@ -1,0 +1,27 @@
+{
+  "name": "@couch/server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Session service: rooms, votes, timer, referee (ARCHITECTURE \u00a75).",
+  "type": "module",
+  "scripts": {
+    "dev": "PHONE_PORT=5173 tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@couch/catalog": "workspace:*",
+    "@couch/protocol": "workspace:*",
+    "@couch/referee": "workspace:*",
+    "@fastify/static": "^10.1.6",
+    "@fastify/websocket": "^11.3.4",
+    "fastify": "^5.12.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "couchconsensus",
+  "private": true,
+  "description": "CouchConsensus: the TV shows a QR code, everyone swipes on their phone, the TV announces one pick.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @couch/server --filter @couch/phone dev",
+    "build": "pnpm --filter @couch/phone build && pnpm --filter @couch/server build",
+    "start": "pnpm --filter @couch/server start",
+    "test": "vitest run",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "tv:build": "pnpm --filter @couch/tv build:debug",
+    "infra:synth": "pnpm --filter @couch/infra synth"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

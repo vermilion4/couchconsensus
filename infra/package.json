@@ -1,0 +1,23 @@
+{
+  "name": "@couch/infra",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AWS CDK app: DynamoDB, ECS Fargate + ALB, CloudFront (ADR-0002, ADR-0003, ADR-0012).",
+  "type": "module",
+  "scripts": {
+    "synth": "cdk synth --quiet",
+    "diff": "cdk diff",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.273.0",
+    "constructs": "^10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "aws-cdk": "^2.1145.0",
+    "tsx": "^4.23.15"
+  }
+}

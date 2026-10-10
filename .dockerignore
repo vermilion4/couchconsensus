@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+**/build
+**/cdk.out
+apps/tv
+spikes
+docs
+.git

@@ -1,0 +1,10 @@
+{
+  "name": "spike-s3-bedrock",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node --experimental-strip-types run.ts" },
+  "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "latest",
+    "zod": "^4"
+  }
+}
