@@ -2,7 +2,7 @@
 
 Oct 10, 2026 · Phase 2 (System Architecture) · See also [ARCHITECTURE.md](ARCHITECTURE.md), [ADRs](adr/README.md)
 
-All shapes below are the source for `packages/protocol` (Zod schemas, TS types inferred with `z.infer`) and `packages/catalog`. Implemented in [`packages/protocol/src`](../../packages/protocol/src); the code is authoritative if the two ever differ. Field names are camelCase on the wire and in DynamoDB. Times are **epoch milliseconds (UTC)** unless the name ends in `Sec`.
+Server-side room state is implemented in [`apps/server/src/rooms/model.ts`](../../apps/server/src/rooms/model.ts). All shapes below are the source for `packages/protocol` (Zod schemas, TS types inferred with `z.infer`) and `packages/catalog`. Implemented in [`packages/protocol/src`](../../packages/protocol/src); the code is authoritative if the two ever differ. Field names are camelCase on the wire and in DynamoDB. Times are **epoch milliseconds (UTC)** unless the name ends in `Sec`.
 
 ## 1. Domain model at a glance
 
@@ -59,7 +59,9 @@ interface Room {
   createdAt: EpochMs;
   expiresAt: EpochMs;         // createdAt + 24h (SV-1)
   hostTokenHash: string;      // sha256 hex (ADR-0010)
+  joinUrl: string;            // what the QR code encodes (built from the request host in production)
   clientInstallId?: string;   // random id the TV generates once; keys SV-7 household memory
+  hostRecentCmdIds?: string[];// last 64 TV command ids (idempotency)
   region: CountryCode;        // from CloudFront-Viewer-Country, host-overridable
   regionSource: "cloudfront" | "deviceLocale" | "host" | "default";
   catalogMode: "demo" | "real";
@@ -160,7 +162,7 @@ interface VoterBallot {
 | I2 | A vote is accepted only if `phase ∈ {voting, suddenDeath}`, `now < endsAt`, and `cardIndex === ballot.votes.length` |
 | I3 | ≤ 1 `veto` and ≤ 1 `superYes` per ballot per round; both disallowed in sudden death |
 | I4 | Undo is accepted only for `cardIndex === votes.length − 1`, before the round ends; it restores veto/super-yes allowance |
-| I5 | `rev` strictly increases; every persisted write is conditional on the previous `rev` |
+| I5 | `rev` strictly increases on every change a client can see, including timer ticks that end a round; every persisted write is conditional on the previous `rev`. Clients keep the newest view by `rev` and drop older or equal ones, so a change without a bump never reaches the screen. If an `ack`'s `rev` is ahead of the last view for 1.5 s, the client reconnects to fetch the current view |
 | I6 | Every round that reaches `verdict` has exactly one winner (`ranking.length ≥ 1`) |
 | I7 | A title with any `veto` never appears in `ranking` |
 | I8 | No projection sent to the TV contains a `VoteValue` |
@@ -321,7 +323,7 @@ type ClientCommand =
 type ServerMessage =
   | { type: "welcome"; role: "host" | "voter"; voterId?: VoterId; protocol: 1 }
   | { type: "view"; view: TvView | VoterView }            // full projection, see §6
-  | { type: "ack"; cmdId: string; ok: true; rev: number }
+  | { type: "ack"; cmdId: string; ok: true; rev: number }   // rev: the room after this command (resync check)
   | { type: "nack"; cmdId: string; ok: false; error: ErrorCode; message: string } // separate type so the union is discriminated
   | { type: "pong"; t: EpochMs; serverNow: EpochMs }
   | { type: "error"; error: ErrorCode; message: string; fatal: boolean };

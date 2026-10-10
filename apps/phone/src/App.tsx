@@ -1,8 +1,12 @@
-// Walking skeleton of the phone flow: Join → connected. Mood, Swipe, Waiting and Result screens come next.
-import {useEffect, useState} from 'preact/hooks';
+// Phone flow (Figma "Phone" screens): Join → Mood → Swipe → Waiting → Result, plus error and reconnect states.
+import {useState} from 'preact/hooks';
 import {JoinRoomResponse, Nickname, RoomCode} from '@couch/protocol';
-import {connect, type ConnState} from './connection';
-import {loadSeat, saveSeat, type Seat} from './seat';
+import {screenFor} from './screen';
+import {clearSeat, loadSeat, saveSeat, type Seat} from './seat';
+import {useRoom} from './useRoom';
+import {Lobby, Mood} from './screens/Mood';
+import {Swipe} from './screens/Swipe';
+import {Closed, Result, Thinking, Waiting} from './screens/After';
 
 function roomCodeFromUrl(): string | undefined {
   const m = location.pathname.match(/^\/r\/([A-Za-z]{4})\/?$/);
@@ -10,22 +14,36 @@ function roomCodeFromUrl(): string | undefined {
   return code && RoomCode.safeParse(code).success ? code : undefined;
 }
 
+type JoinProblem = 'notFound' | 'full' | undefined;
+
 export function App() {
   const roomCode = roomCodeFromUrl();
   const [seat, setSeat] = useState<Seat | undefined>(() => (roomCode ? loadSeat(roomCode) : undefined));
+  const [problem, setProblem] = useState<JoinProblem>();
 
   if (!roomCode)
     return (
       <main class="screen">
         <h1>CouchConsensus</h1>
-        <p>Scan the QR code on the TV to join a room.</p>
+        <p class="muted">Scan the QR code on the TV to join a room.</p>
       </main>
     );
-
-  return seat ? <Connected roomCode={roomCode} seat={seat} /> : <Join roomCode={roomCode} onSeat={setSeat} />;
+  if (problem === 'full') return <RoomFull roomCode={roomCode} onRetry={() => setProblem(undefined)} />;
+  if (!seat) return <Join roomCode={roomCode} notFound={problem === 'notFound'} onSeat={setSeat} onProblem={setProblem} />;
+  return (
+    <Room
+      roomCode={roomCode}
+      seat={seat}
+      onLost={p => {
+        clearSeat(roomCode);
+        setSeat(undefined);
+        setProblem(p);
+      }}
+    />
+  );
 }
 
-function Join({roomCode, onSeat}: {roomCode: string; onSeat: (s: Seat) => void}) {
+function Join(props: {roomCode: string; notFound: boolean; onSeat: (s: Seat) => void; onProblem: (p: JoinProblem) => void}) {
   const [name, setName] = useState('');
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -37,16 +55,18 @@ function Join({roomCode, onSeat}: {roomCode: string; onSeat: (s: Seat) => void})
     setBusy(true);
     setError(undefined);
     try {
-      const res = await fetch(`/api/rooms/${roomCode}/seats`, {
+      const res = await fetch(`/api/rooms/${props.roomCode}/seats`, {
         method: 'POST',
         headers: {'content-type': 'application/json'},
         body: JSON.stringify({nickname: nick.data}),
       });
       const body = await res.json();
+      if (res.status === 404 || res.status === 410 || body.error === 'WRONG_PHASE') return props.onProblem('notFound');
+      if (body.error === 'ROOM_FULL') return props.onProblem('full');
       if (!res.ok) throw new Error(body.message ?? 'Could not join');
       const seat = JoinRoomResponse.parse(body);
-      saveSeat(roomCode, seat);
-      onSeat(seat);
+      saveSeat(props.roomCode, seat);
+      props.onSeat(seat);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -54,9 +74,18 @@ function Join({roomCode, onSeat}: {roomCode: string; onSeat: (s: Seat) => void})
     }
   };
 
+  if (props.notFound)
+    return (
+      <main class="screen">
+        <p class="eyebrow">Room {props.roomCode}</p>
+        <h1>That room isn't open</h1>
+        <p class="muted">Check the 4 letters on the TV. Rooms close after 24 hours or when the host ends them.</p>
+      </main>
+    );
+
   return (
     <main class="screen">
-      <p class="code">Room {roomCode}</p>
+      <p class="eyebrow">Room {props.roomCode}</p>
       <h1>What should we call you?</h1>
       <form onSubmit={submit}>
         <input
@@ -67,43 +96,65 @@ function Join({roomCode, onSeat}: {roomCode: string; onSeat: (s: Seat) => void})
           autoFocus
           placeholder="Your name"
           aria-label="Your name"
+          aria-invalid={error ? 'true' : undefined}
         />
-        <button type="submit" disabled={busy}>
+        <p class={error ? 'error small' : 'muted small'}>{error ?? 'Up to 12 characters. Everyone in the room sees it.'}</p>
+        <button type="submit" class="primary" disabled={busy}>
           {busy ? 'Joining…' : 'Join'}
         </button>
       </form>
-      {error && <p class="error">{error}</p>}
-      <p class="hint">No app, no account. Your votes stay private.</p>
+      <p class="muted small footer">No app, no account. Your votes stay private.</p>
     </main>
   );
 }
 
-function Connected({roomCode, seat}: {roomCode: string; seat: Seat}) {
-  const [state, setState] = useState<ConnState>('connecting');
-  const [detail, setDetail] = useState<string>();
-
-  useEffect(
-    () =>
-      connect(
-        roomCode,
-        seat.seatToken,
-        (s, d) => {
-          setState(s);
-          setDetail(d);
-        },
-        () => {},
-      ),
-    [roomCode, seat.seatToken],
-  );
-
+function RoomFull({roomCode, onRetry}: {roomCode: string; onRetry: () => void}) {
   return (
     <main class="screen">
-      <p class="code">Room {roomCode}</p>
-      <h1>Hi {seat.nickname}!</h1>
-      {state === 'open' && <p>You're in. Look up at the TV.</p>}
-      {state === 'connecting' && <p>Connecting…</p>}
-      {state === 'closed' && <p>Reconnecting…</p>}
-      {state === 'rejected' && <p class="error">{detail ?? 'This room is no longer available.'}</p>}
+      <p class="eyebrow">Room {roomCode}</p>
+      <h1>This room is full</h1>
+      <p class="muted">A room holds up to 8 people, and all the seats are taken. Ask the host to start a new room when this round ends.</p>
+      <button class="primary" onClick={onRetry}>
+        Try again
+      </button>
     </main>
+  );
+}
+
+function Room({roomCode, seat, onLost}: {roomCode: string; seat: Seat; onLost: (p: JoinProblem) => void}) {
+  const client = useRoom(roomCode, seat.seatToken);
+  const [editingMood, setEditingMood] = useState(false);
+
+  if (client.state === 'rejected') {
+    // expired/closed room or a seat that no longer exists: start over at Join
+    queueMicrotask(() => onLost(client.rejection === 'UNAUTHORIZED' ? undefined : 'notFound'));
+    return null;
+  }
+  const view = client.view;
+  const banner = client.state === 'reconnecting' && (
+    <div class="banner" role="status">
+      <span class="dot" /> Reconnecting. Your votes are saved.
+    </div>
+  );
+  if (!view)
+    return (
+      <main class="screen">
+        {banner}
+        <p class="muted">Connecting…</p>
+      </main>
+    );
+
+  const screen = editingMood && view.phase === 'lobby' ? 'mood' : screenFor(view);
+  return (
+    <>
+      {banner}
+      {screen === 'mood' && <Mood client={client} view={view} onDone={() => setEditingMood(false)} />}
+      {screen === 'lobby' && <Lobby view={view} onChangeMood={() => setEditingMood(true)} />}
+      {screen === 'swipe' && <Swipe client={client} view={view} />}
+      {screen === 'waiting' && <Waiting client={client} view={view} />}
+      {screen === 'thinking' && <Thinking />}
+      {screen === 'result' && <Result view={view} />}
+      {screen === 'closed' && <Closed />}
+    </>
   );
 }

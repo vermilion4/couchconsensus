@@ -21,10 +21,13 @@ const HTTP_STATUS: Record<RoomError['code'], number> = {
   ROOM_EXPIRED: 410,
   ROOM_FULL: 409,
   UNAUTHORIZED: 401,
+  WRONG_PHASE: 409,
 };
 
 export async function buildApp(config: Config, rooms = new RoomManager()): Promise<FastifyInstance> {
   const app = Fastify({logger: {level: config.logLevel}, bodyLimit: MAX_MESSAGE_BYTES});
+  rooms.start();
+  app.addHook('onClose', async () => rooms.stop());
 
   app.setErrorHandler((err, _req, reply) => {
     if (err instanceof RoomError) return reply.code(HTTP_STATUS[err.code]).send({error: err.code, message: err.message});
@@ -39,25 +42,21 @@ export async function buildApp(config: Config, rooms = new RoomManager()): Promi
   // ---------- REST ----------
 
   app.post('/api/rooms', async req => {
-    CreateRoomRequest.parse(req.body);
+    const {clientInstallId} = CreateRoomRequest.parse(req.body);
     // CloudFront adds the viewer's country (ADR-0009); local dev falls back to the default.
     const country = String(req.headers['cloudfront-viewer-country'] ?? config.defaultRegion);
-    const {room, hostToken} = rooms.create(country);
+    const base = config.publicBaseUrl ?? requestOrigin(req.headers);
+    const {room, hostToken} = rooms.create(country, code => `${base}/r/${code}`, clientInstallId);
     req.log.info({roomCode: room.code, region: room.region}, 'room created');
-    return {
-      roomCode: room.code,
-      joinUrl: `${config.publicBaseUrl ?? requestOrigin(req.headers)}/r/${room.code}`,
-      hostToken,
-      region: room.region,
-    };
+    return {roomCode: room.code, joinUrl: room.joinUrl, hostToken, region: room.region};
   });
 
   app.post<{Params: {code: string}}>('/api/rooms/:code/seats', async req => {
     const code = RoomCode.parse(req.params.code.toUpperCase());
     const {nickname} = JoinRoomRequest.parse(req.body);
-    const {voter, seatToken} = rooms.seat(code, nickname);
-    req.log.info({roomCode: code, voterId: voter.id}, 'voter seated');
-    return {voterId: voter.id, seatToken, nickname: voter.nickname};
+    const seat = rooms.seat(code, nickname);
+    req.log.info({roomCode: code, voterId: seat.voterId}, 'voter seated');
+    return seat;
   });
 
   // ---------- WebSocket ----------
@@ -67,7 +66,11 @@ export async function buildApp(config: Config, rooms = new RoomManager()): Promi
   app.get('/ws', {websocket: true}, socket => {
     let auth: Auth | undefined;
     let roomCode: string | undefined;
-    const send = (m: ServerMessage) => socket.send(JSON.stringify(m));
+    let detach: (() => void) | undefined;
+    const send = (m: ServerMessage) => {
+      if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(m));
+    };
+    socket.on('close', () => detach?.());
 
     socket.on('message', raw => {
       let parsed;
@@ -79,19 +82,25 @@ export async function buildApp(config: Config, rooms = new RoomManager()): Promi
       if (!parsed?.success) return send({type: 'error', error: 'BAD_MESSAGE', message: 'Unreadable message', fatal: false});
       const msg = parsed.data;
 
-      if (msg.type === 'ping') return send({type: 'pong', t: msg.t, serverNow: Date.now()});
+      if (msg.type === 'ping') {
+        if (auth && roomCode) rooms.touch(roomCode, auth);
+        return send({type: 'pong', t: msg.t, serverNow: Date.now()});
+      }
 
       if (msg.type === 'hello') {
         try {
           auth = rooms.authenticate(msg.roomCode, msg.role, msg.token);
           roomCode = msg.roomCode;
           app.log.info({roomCode, role: auth.role}, 'socket authenticated');
-          return send({
+          send({
             type: 'welcome',
             role: auth.role,
             ...(auth.role === 'voter' ? {voterId: auth.voterId} : {}),
             protocol: PROTOCOL_VERSION,
           });
+          detach?.();
+          detach = rooms.attach(roomCode, auth, {send}); // sends the first view
+          return;
         } catch (e) {
           const code = e instanceof RoomError ? e.code : 'INTERNAL';
           app.log.warn({roomCode: msg.roomCode, role: msg.role, code}, 'socket rejected');
@@ -101,15 +110,40 @@ export async function buildApp(config: Config, rooms = new RoomManager()): Promi
       }
 
       if (!auth || !roomCode) return send({type: 'error', error: 'UNAUTHORIZED', message: 'Send hello first', fatal: false});
-      // Commands are routed to the room's serial queue in the next step.
-      return send({type: 'nack', cmdId: msg.cmdId, ok: false, error: 'WRONG_PHASE', message: 'Not implemented yet'});
+      try {
+        const r = rooms.dispatch(roomCode, auth, msg);
+        return send(
+          r.ok
+            ? {type: 'ack', cmdId: msg.cmdId, ok: true, rev: r.rev}
+            : {type: 'nack', cmdId: msg.cmdId, ok: false, error: r.error, message: r.message},
+        );
+      } catch (e) {
+        const code = e instanceof RoomError ? e.code : 'INTERNAL';
+        if (code === 'INTERNAL') app.log.error(e);
+        return send({type: 'nack', cmdId: msg.cmdId, ok: false, error: code, message: (e as Error).message});
+      }
     });
   });
+
+  // ---------- demo poster art (original, SV-6) ----------
+
+  if (existsSync(config.artDir)) {
+    await app.register(fastifyStatic, {
+      root: config.artDir,
+      prefix: '/art/',
+      decorateReply: false,
+      maxAge: '7d',
+      immutable: true,
+    });
+  } else {
+    app.log.warn(`Poster art not found (${config.artDir}); run "node packages/catalog/scripts/build-posters.mjs"`);
+  }
 
   // ---------- phone page ----------
 
   if (existsSync(config.phoneDistDir)) {
-    await app.register(fastifyStatic, {root: config.phoneDistDir, prefix: '/', wildcard: false});
+    // wildcard: files are looked up per request, so a rebuilt phone page is served without a restart
+    await app.register(fastifyStatic, {root: config.phoneDistDir, prefix: '/', wildcard: true});
     app.get('/r/:code', (_req, reply) => reply.sendFile('index.html'));
   } else {
     app.log.warn(`Phone page not built (${config.phoneDistDir}); run "pnpm --filter @couch/phone build", or use the Vite dev server`);

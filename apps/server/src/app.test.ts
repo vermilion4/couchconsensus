@@ -19,6 +19,12 @@ describe('session service skeleton', () => {
   const createRoom = async () =>
     (await app.inject({method: 'POST', url: '/api/rooms', payload: {clientInstallId: 'install-12345678'}})).json();
 
+  it('serves demo poster art', async () => {
+    const res = await app.inject('/art/demo-0001.png');
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toBe('image/png');
+  });
+
   it('reports health', async () => {
     const res = await app.inject('/healthz');
     expect(res.json()).toMatchObject({ok: true, protocol: 1});

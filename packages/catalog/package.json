@@ -12,5 +12,8 @@
   "dependencies": {
     "@couch/protocol": "workspace:*",
     "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
   }
 }

@@ -1,18 +1,1745 @@
 {
-  "schemaVersion": 1,
-  "mode": "demo",
-  "generatedAt": "2026-10-10",
-  "services": [
-    { "id": "demo:streamco", "name": "StreamCo", "regions": ["ZZ"] },
-    { "id": "demo:flixbox", "name": "FlixBox", "regions": ["ZZ"] },
-    { "id": "demo:reelhub", "name": "ReelHub", "regions": ["ZZ"] }
-  ],
-  "titles": [
-    { "id": "demo:0001", "kind": "film", "title": "The Last Lighthouse Keeper", "year": 2019, "runtimeMin": 104, "genres": ["drama", "mystery"], "tags": ["slow-burn", "small-town"], "logline": "A keeper on a fog-bound island starts receiving letters from a ship that sank a century ago.", "adult": false, "popularity": 61, "posterPath": "/art/demo-0001.webp", "availability": { "ZZ": [{ "serviceId": "demo:streamco", "type": "subscription" }] } },
-    { "id": "demo:0002", "kind": "film", "title": "Pancake Heist", "year": 2022, "runtimeMin": 92, "genres": ["comedy", "crime"], "tags": ["heist", "feel-good"], "logline": "Four diner regulars plan to steal a secret batter recipe before the chain buys their town.", "adult": false, "popularity": 74, "posterPath": "/art/demo-0002.webp", "availability": { "ZZ": [{ "serviceId": "demo:flixbox", "type": "subscription" }] } },
-    { "id": "demo:0003", "kind": "film", "title": "Orbit of Small Things", "year": 2017, "runtimeMin": 131, "genres": ["scienceFiction", "drama"], "tags": ["space", "found-family"], "logline": "A repair crew on a failing space station adopts the AI nobody else wants to talk to.", "adult": false, "popularity": 68, "posterPath": "/art/demo-0003.webp", "availability": { "ZZ": [{ "serviceId": "demo:reelhub", "type": "subscription" }] } },
-    { "id": "demo:0004", "kind": "film", "title": "Paper Lanterns", "year": 2021, "runtimeMin": 88, "genres": ["animation", "family"], "tags": ["cozy", "musical"], "logline": "A shy paper lantern floats away from the festival and has one night to find its way home.", "adult": false, "popularity": 80, "posterPath": "/art/demo-0004.webp", "availability": { "ZZ": [{ "serviceId": "demo:streamco", "type": "subscription" }, { "serviceId": "demo:flixbox", "type": "rent" }] } },
-    { "id": "demo:0005", "kind": "film", "title": "Midnight at Hollow Farm", "year": 2015, "runtimeMin": 97, "genres": ["horror", "thriller"], "tags": ["twisty", "small-town"], "logline": "A family inherits a farm where the scarecrows face a different way every morning.", "adult": false, "popularity": 57, "posterPath": "/art/demo-0005.webp", "availability": { "ZZ": [{ "serviceId": "demo:reelhub", "type": "subscription" }] } },
-    { "id": "demo:0006", "kind": "film", "title": "Second Serve", "year": 2023, "runtimeMin": 112, "genres": ["romance", "comedy"], "tags": ["feel-good", "road-trip"], "logline": "Two rival tennis coaches share a van across the country to reach the same tournament.", "adult": false, "popularity": 66, "posterPath": "/art/demo-0006.webp", "availability": { "ZZ": [{ "serviceId": "demo:flixbox", "type": "subscription" }] } }
-  ]
+ "schemaVersion": 1,
+ "mode": "demo",
+ "generatedAt": "2026-10-10",
+ "services": [
+  {
+   "id": "demo:streamco",
+   "name": "StreamCo",
+   "regions": [
+    "ZZ"
+   ]
+  },
+  {
+   "id": "demo:flixbox",
+   "name": "FlixBox",
+   "regions": [
+    "ZZ"
+   ]
+  },
+  {
+   "id": "demo:reelhub",
+   "name": "ReelHub",
+   "regions": [
+    "ZZ"
+   ]
+  }
+ ],
+ "titles": [
+  {
+   "id": "demo:0001",
+   "kind": "film",
+   "title": "The Last Lighthouse Keeper",
+   "year": 2019,
+   "runtimeMin": 104,
+   "genres": [
+    "drama",
+    "mystery"
+   ],
+   "tags": [
+    "slow-burn",
+    "small-town"
+   ],
+   "logline": "A keeper on a fog-bound island starts receiving letters from a ship that sank a century ago.",
+   "adult": false,
+   "popularity": 61,
+   "posterPath": "/art/demo-0001.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0002",
+   "kind": "film",
+   "title": "Pancake Heist",
+   "year": 2022,
+   "runtimeMin": 92,
+   "genres": [
+    "comedy",
+    "crime"
+   ],
+   "tags": [
+    "heist",
+    "feel-good"
+   ],
+   "logline": "Four diner regulars plan to steal a secret batter recipe before the chain buys their town.",
+   "adult": false,
+   "popularity": 74,
+   "posterPath": "/art/demo-0002.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0003",
+   "kind": "film",
+   "title": "Orbit of Small Things",
+   "year": 2017,
+   "runtimeMin": 131,
+   "genres": [
+    "scienceFiction",
+    "drama"
+   ],
+   "tags": [
+    "space",
+    "found-family"
+   ],
+   "logline": "A repair crew on a failing space station adopts the AI nobody else wants to talk to.",
+   "adult": false,
+   "popularity": 68,
+   "posterPath": "/art/demo-0003.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0004",
+   "kind": "film",
+   "title": "Paper Lanterns",
+   "year": 2021,
+   "runtimeMin": 88,
+   "genres": [
+    "animation",
+    "family"
+   ],
+   "tags": [
+    "cozy",
+    "musical"
+   ],
+   "logline": "A shy paper lantern floats away from the festival and has one night to find its way home.",
+   "adult": false,
+   "popularity": 80,
+   "posterPath": "/art/demo-0004.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0005",
+   "kind": "film",
+   "title": "Midnight at Hollow Farm",
+   "year": 2015,
+   "runtimeMin": 97,
+   "genres": [
+    "horror",
+    "thriller"
+   ],
+   "tags": [
+    "twisty",
+    "small-town"
+   ],
+   "logline": "A family inherits a farm where the scarecrows face a different way every morning.",
+   "adult": false,
+   "popularity": 57,
+   "posterPath": "/art/demo-0005.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0006",
+   "kind": "film",
+   "title": "Second Serve",
+   "year": 2023,
+   "runtimeMin": 112,
+   "genres": [
+    "romance",
+    "comedy"
+   ],
+   "tags": [
+    "feel-good",
+    "road-trip"
+   ],
+   "logline": "Two rival tennis coaches share a van across the country to reach the same tournament.",
+   "adult": false,
+   "popularity": 66,
+   "posterPath": "/art/demo-0006.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0007",
+   "kind": "film",
+   "title": "Copper Canyon Express",
+   "year": 2011,
+   "runtimeMin": 118,
+   "genres": [
+    "western",
+    "action"
+   ],
+   "tags": [
+    "chase",
+    "one-last-job"
+   ],
+   "logline": "A retired stagecoach driver makes one last run through bandit country with a cargo nobody will name.",
+   "adult": false,
+   "popularity": 52,
+   "posterPath": "/art/demo-0007.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0008",
+   "kind": "film",
+   "title": "The Brass Orchestra",
+   "year": 2018,
+   "runtimeMin": 121,
+   "genres": [
+    "music",
+    "drama"
+   ],
+   "tags": [
+    "underdog",
+    "small-town"
+   ],
+   "logline": "A broke town band has one season to win the regional contest and save their old hall.",
+   "adult": false,
+   "popularity": 59,
+   "posterPath": "/art/demo-0008.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0009",
+   "kind": "film",
+   "title": "Field Notes from a Melting Glacier",
+   "year": 2024,
+   "runtimeMin": 86,
+   "genres": [
+    "documentary"
+   ],
+   "tags": [
+    "nature",
+    "quiet"
+   ],
+   "logline": "Three scientists spend a year on a shrinking ice field, measuring what is left.",
+   "adult": false,
+   "popularity": 44,
+   "posterPath": "/art/demo-0009.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0010",
+   "kind": "film",
+   "title": "Winter of the Iron Bridge",
+   "year": 2009,
+   "runtimeMin": 146,
+   "genres": [
+    "war",
+    "drama"
+   ],
+   "tags": [
+    "slow-burn",
+    "enemies"
+   ],
+   "logline": "Two engineers on opposite sides must keep the same bridge standing through a hard winter.",
+   "adult": false,
+   "popularity": 55,
+   "posterPath": "/art/demo-0010.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0011",
+   "kind": "film",
+   "title": "The Cartographer's Daughter",
+   "year": 2020,
+   "runtimeMin": 109,
+   "genres": [
+    "adventure",
+    "family"
+   ],
+   "tags": [
+    "treasure",
+    "island"
+   ],
+   "logline": "A girl finishes her father's last map and finds the island on it is real.",
+   "adult": false,
+   "popularity": 71,
+   "posterPath": "/art/demo-0011.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0012",
+   "kind": "film",
+   "title": "Clockwork Kingdom",
+   "year": 2016,
+   "runtimeMin": 138,
+   "genres": [
+    "fantasy",
+    "adventure"
+   ],
+   "tags": [
+    "quest",
+    "race-against-time"
+   ],
+   "logline": "A clockmaker's apprentice winds up a sleeping city and has until midnight to set it right.",
+   "adult": false,
+   "popularity": 69,
+   "posterPath": "/art/demo-0012.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0013",
+   "kind": "film",
+   "title": "Static on Channel Nine",
+   "year": 2014,
+   "runtimeMin": 94,
+   "genres": [
+    "horror",
+    "mystery"
+   ],
+   "tags": [
+    "twisty",
+    "late-night"
+   ],
+   "logline": "A late-night TV host gets calls from viewers describing a broadcast that hasn't aired yet.",
+   "adult": false,
+   "popularity": 63,
+   "posterPath": "/art/demo-0013.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0014",
+   "kind": "film",
+   "title": "The Quiet Accountant",
+   "year": 2019,
+   "runtimeMin": 116,
+   "genres": [
+    "thriller",
+    "crime"
+   ],
+   "tags": [
+    "slow-burn",
+    "small-town"
+   ],
+   "logline": "A small-town bookkeeper spots one number that doesn't add up and can't stop looking.",
+   "adult": false,
+   "popularity": 58,
+   "posterPath": "/art/demo-0014.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0015",
+   "kind": "film",
+   "title": "Moonlight Dumpling Club",
+   "year": 2022,
+   "runtimeMin": 101,
+   "genres": [
+    "comedy",
+    "romance"
+   ],
+   "tags": [
+    "cozy",
+    "food"
+   ],
+   "logline": "Strangers at a night-shift cooking class keep failing the same recipe and falling for each other.",
+   "adult": false,
+   "popularity": 76,
+   "posterPath": "/art/demo-0015.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0016",
+   "kind": "film",
+   "title": "The Long March Home",
+   "year": 2008,
+   "runtimeMin": 158,
+   "genres": [
+    "history",
+    "drama"
+   ],
+   "tags": [
+    "epic",
+    "journey"
+   ],
+   "logline": "A regiment's cook leads forty stranded soldiers home across a collapsing empire.",
+   "adult": false,
+   "popularity": 50,
+   "posterPath": "/art/demo-0016.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0017",
+   "kind": "film",
+   "title": "Robo Rumble Junior",
+   "year": 2021,
+   "runtimeMin": 84,
+   "genres": [
+    "animation",
+    "action"
+   ],
+   "tags": [
+    "underdog",
+    "feel-good"
+   ],
+   "logline": "A scrapyard robot joins a kids' battle league and refuses to throw a single punch.",
+   "adult": false,
+   "popularity": 73,
+   "posterPath": "/art/demo-0017.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0018",
+   "kind": "film",
+   "title": "Signal from Saltmarsh Ridge",
+   "year": 2018,
+   "runtimeMin": 127,
+   "genres": [
+    "scienceFiction",
+    "mystery"
+   ],
+   "tags": [
+    "twisty",
+    "small-town"
+   ],
+   "logline": "A radio club picks up a message that repeats every 26 minutes, in their own voices.",
+   "adult": false,
+   "popularity": 65,
+   "posterPath": "/art/demo-0018.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "rent"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0019",
+   "kind": "film",
+   "title": "The Bakers of Rue Verte",
+   "year": 2023,
+   "runtimeMin": 82,
+   "genres": [
+    "documentary",
+    "family"
+   ],
+   "tags": [
+    "food",
+    "cozy"
+   ],
+   "logline": "A year inside a family bakery that has opened at 4 a.m. every day for ninety years.",
+   "adult": false,
+   "popularity": 48,
+   "posterPath": "/art/demo-0019.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0020",
+   "kind": "film",
+   "title": "Blood Moon over Dry Creek",
+   "year": 2013,
+   "runtimeMin": 124,
+   "genres": [
+    "western",
+    "thriller"
+   ],
+   "tags": [
+    "standoff",
+    "twisty"
+   ],
+   "logline": "A sheriff with one bullet left must decide which of three strangers is lying.",
+   "adult": false,
+   "popularity": 54,
+   "posterPath": "/art/demo-0020.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0021",
+   "kind": "film",
+   "title": "Dragonfly Summer",
+   "year": 2019,
+   "runtimeMin": 95,
+   "genres": [
+    "family",
+    "adventure"
+   ],
+   "tags": [
+    "cozy",
+    "river"
+   ],
+   "logline": "Three cousins build a raft to follow a dragonfly migration down the river.",
+   "adult": false,
+   "popularity": 70,
+   "posterPath": "/art/demo-0021.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0022",
+   "kind": "film",
+   "title": "The Velvet Alibi",
+   "year": 2017,
+   "runtimeMin": 108,
+   "genres": [
+    "crime",
+    "mystery"
+   ],
+   "tags": [
+    "whodunit",
+    "jazz"
+   ],
+   "logline": "Every suspect in a jazz club murder has the same alibi: they were on stage.",
+   "adult": false,
+   "popularity": 67,
+   "posterPath": "/art/demo-0022.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0023",
+   "kind": "film",
+   "title": "Under the Northern Lights",
+   "year": 2020,
+   "runtimeMin": 113,
+   "genres": [
+    "romance",
+    "drama"
+   ],
+   "tags": [
+    "slow-burn",
+    "snow"
+   ],
+   "logline": "A tour guide and a stubborn astronomer wait out a week of clouds in the same cabin.",
+   "adult": false,
+   "popularity": 62,
+   "posterPath": "/art/demo-0023.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0024",
+   "kind": "film",
+   "title": "Ghosts of the Grand Hotel",
+   "year": 2016,
+   "runtimeMin": 99,
+   "genres": [
+    "horror",
+    "comedy"
+   ],
+   "tags": [
+    "ensemble",
+    "spooky"
+   ],
+   "logline": "The night staff of a haunted hotel form a union against the ghosts.",
+   "adult": false,
+   "popularity": 72,
+   "posterPath": "/art/demo-0024.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0025",
+   "kind": "film",
+   "title": "Last Dance at the Starlight",
+   "year": 2015,
+   "runtimeMin": 118,
+   "genres": [
+    "music",
+    "romance"
+   ],
+   "tags": [
+    "musical",
+    "rivals"
+   ],
+   "logline": "Two rival dance-hall singers are booked for the same final night before demolition.",
+   "adult": false,
+   "popularity": 60,
+   "posterPath": "/art/demo-0025.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0026",
+   "kind": "film",
+   "title": "Operation Teacup",
+   "year": 2012,
+   "runtimeMin": 102,
+   "genres": [
+    "war",
+    "comedy"
+   ],
+   "tags": [
+    "ensemble",
+    "farce"
+   ],
+   "logline": "A misdelivered crate of tea turns a forgotten supply depot into the front line.",
+   "adult": false,
+   "popularity": 56,
+   "posterPath": "/art/demo-0026.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0027",
+   "kind": "film",
+   "title": "The Salt Road",
+   "year": 2010,
+   "runtimeMin": 142,
+   "genres": [
+    "history",
+    "adventure"
+   ],
+   "tags": [
+    "epic",
+    "desert"
+   ],
+   "logline": "A caravan of salt traders crosses a desert empire just as it changes hands.",
+   "adult": false,
+   "popularity": 49,
+   "posterPath": "/art/demo-0027.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0028",
+   "kind": "film",
+   "title": "Tiny Titans",
+   "year": 2024,
+   "runtimeMin": 87,
+   "genres": [
+    "animation",
+    "comedy"
+   ],
+   "tags": [
+    "heist",
+    "feel-good"
+   ],
+   "logline": "Pantry ants plan a heist for the last sugar cube of winter.",
+   "adult": false,
+   "popularity": 78,
+   "posterPath": "/art/demo-0028.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0029",
+   "kind": "film",
+   "title": "Echoes Below",
+   "year": 2021,
+   "runtimeMin": 119,
+   "genres": [
+    "thriller",
+    "scienceFiction"
+   ],
+   "tags": [
+    "survival",
+    "twisty"
+   ],
+   "logline": "A cave-diving team surfaces to find the world above has moved on without them.",
+   "adult": false,
+   "popularity": 64,
+   "posterPath": "/art/demo-0029.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0030",
+   "kind": "film",
+   "title": "The Glass Archer",
+   "year": 2018,
+   "runtimeMin": 134,
+   "genres": [
+    "fantasy",
+    "action"
+   ],
+   "tags": [
+    "quest",
+    "epic"
+   ],
+   "logline": "A warrior whose arrows shatter on impact must win a war without killing anyone.",
+   "adult": false,
+   "popularity": 66,
+   "posterPath": "/art/demo-0030.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0031",
+   "kind": "film",
+   "title": "Sundays with Grandpa Otto",
+   "year": 2022,
+   "runtimeMin": 97,
+   "genres": [
+    "drama",
+    "comedy"
+   ],
+   "tags": [
+    "family-secrets",
+    "feel-good"
+   ],
+   "logline": "A teen stuck with Sunday chores learns her grandfather was once a stunt driver.",
+   "adult": false,
+   "popularity": 69,
+   "posterPath": "/art/demo-0031.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0032",
+   "kind": "film",
+   "title": "Rain Check at the Wedding",
+   "year": 2023,
+   "runtimeMin": 106,
+   "genres": [
+    "romance",
+    "comedy"
+   ],
+   "tags": [
+    "feel-good",
+    "ensemble"
+   ],
+   "logline": "A wedding planner and a weather forecaster fight a week of storms to save one ceremony.",
+   "adult": false,
+   "popularity": 71,
+   "posterPath": "/art/demo-0032.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0033",
+   "kind": "film",
+   "title": "The Paper Throne",
+   "year": 2007,
+   "runtimeMin": 151,
+   "genres": [
+    "history",
+    "drama"
+   ],
+   "tags": [
+    "epic",
+    "politics"
+   ],
+   "logline": "A child queen rules through letters while her advisers fight over who writes them.",
+   "adult": false,
+   "popularity": 47,
+   "posterPath": "/art/demo-0033.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0034",
+   "kind": "film",
+   "title": "Night Shift at Pier Nine",
+   "year": 2020,
+   "runtimeMin": 111,
+   "genres": [
+    "crime",
+    "thriller"
+   ],
+   "tags": [
+    "noir",
+    "witness"
+   ],
+   "logline": "A dockworker sees one container unloaded at night and becomes the only witness.",
+   "adult": false,
+   "popularity": 61,
+   "posterPath": "/art/demo-0034.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0035",
+   "kind": "film",
+   "title": "Bigfoot Has a Podcast",
+   "year": 2024,
+   "runtimeMin": 89,
+   "genres": [
+    "comedy",
+    "documentary"
+   ],
+   "tags": [
+    "mockumentary",
+    "feel-good"
+   ],
+   "logline": "A mockumentary about the world's shyest cryptid trying to go viral.",
+   "adult": false,
+   "popularity": 75,
+   "posterPath": "/art/demo-0035.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0036",
+   "kind": "film",
+   "title": "Galaxy Lullaby",
+   "year": 2019,
+   "runtimeMin": 92,
+   "genres": [
+    "animation",
+    "scienceFiction"
+   ],
+   "tags": [
+    "space",
+    "cozy"
+   ],
+   "logline": "A sleepy space whale has to sing a lost star back to its constellation.",
+   "adult": false,
+   "popularity": 77,
+   "posterPath": "/art/demo-0036.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0037",
+   "kind": "film",
+   "title": "The Foundry Strike",
+   "year": 2011,
+   "runtimeMin": 128,
+   "genres": [
+    "history",
+    "drama"
+   ],
+   "tags": [
+    "underdog",
+    "ensemble"
+   ],
+   "logline": "Six women run a steel foundry for one winter while the town waits for news from the front.",
+   "adult": false,
+   "popularity": 51,
+   "posterPath": "/art/demo-0037.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0038",
+   "kind": "film",
+   "title": "Whispering Pines",
+   "year": 2017,
+   "runtimeMin": 103,
+   "genres": [
+    "horror",
+    "mystery"
+   ],
+   "tags": [
+    "spooky",
+    "camp"
+   ],
+   "logline": "Campers at a lakeside retreat hear their own names in the wind, one each night.",
+   "adult": false,
+   "popularity": 62,
+   "posterPath": "/art/demo-0038.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0039",
+   "kind": "film",
+   "title": "The Final Lap",
+   "year": 2021,
+   "runtimeMin": 120,
+   "genres": [
+    "drama",
+    "action"
+   ],
+   "tags": [
+    "road-trip",
+    "family-secrets"
+   ],
+   "logline": "A veteran rally driver and her estranged son share a car for one last desert race.",
+   "adult": false,
+   "popularity": 64,
+   "posterPath": "/art/demo-0039.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0040",
+   "kind": "film",
+   "title": "Treasure of the Jade Lagoon",
+   "year": 2014,
+   "runtimeMin": 104,
+   "genres": [
+    "adventure",
+    "family"
+   ],
+   "tags": [
+    "treasure",
+    "island"
+   ],
+   "logline": "Two siblings follow their grandmother's riddles to a reef she swore she saw as a girl.",
+   "adult": false,
+   "popularity": 68,
+   "posterPath": "/art/demo-0040.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0041",
+   "kind": "film",
+   "title": "A Song for Hazel",
+   "year": 2020,
+   "runtimeMin": 110,
+   "genres": [
+    "music",
+    "drama"
+   ],
+   "tags": [
+    "slow-burn",
+    "city"
+   ],
+   "logline": "A busker writes one song a day for a stranger who never stops to listen.",
+   "adult": false,
+   "popularity": 58,
+   "posterPath": "/art/demo-0041.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0042",
+   "kind": "film",
+   "title": "The Deserter's Map",
+   "year": 2016,
+   "runtimeMin": 133,
+   "genres": [
+    "war",
+    "adventure"
+   ],
+   "tags": [
+    "journey",
+    "enemies"
+   ],
+   "logline": "A deserter and the officer sent to find him must cross enemy country together.",
+   "adult": false,
+   "popularity": 53,
+   "posterPath": "/art/demo-0042.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0043",
+   "kind": "film",
+   "title": "Cold Case Kitchen",
+   "year": 2023,
+   "runtimeMin": 96,
+   "genres": [
+    "crime",
+    "comedy"
+   ],
+   "tags": [
+    "whodunit",
+    "food"
+   ],
+   "logline": "A retired detective turned cook solves old cases from her restaurant's regulars.",
+   "adult": false,
+   "popularity": 73,
+   "posterPath": "/art/demo-0043.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0044",
+   "kind": "film",
+   "title": "Lighthouse of Lost Toys",
+   "year": 2022,
+   "runtimeMin": 85,
+   "genres": [
+    "animation",
+    "fantasy"
+   ],
+   "tags": [
+    "cozy",
+    "found-family"
+   ],
+   "logline": "Toys left on a beach sail to an island where nothing is ever thrown away.",
+   "adult": false,
+   "popularity": 79,
+   "posterPath": "/art/demo-0044.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0045",
+   "kind": "film",
+   "title": "The Seventh Floor",
+   "year": 2018,
+   "runtimeMin": 98,
+   "genres": [
+    "horror",
+    "thriller"
+   ],
+   "tags": [
+    "office",
+    "twisty"
+   ],
+   "logline": "An office elevator keeps stopping at a floor that isn't on the building plans.",
+   "adult": false,
+   "popularity": 60,
+   "posterPath": "/art/demo-0045.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0046",
+   "kind": "film",
+   "title": "Frontier Doctor",
+   "year": 2009,
+   "runtimeMin": 125,
+   "genres": [
+    "western",
+    "drama"
+   ],
+   "tags": [
+    "small-town",
+    "slow-burn"
+   ],
+   "logline": "A newly qualified doctor reaches a mining town that has never had one, and may not want one.",
+   "adult": false,
+   "popularity": 52,
+   "posterPath": "/art/demo-0046.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "rent"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0047",
+   "kind": "film",
+   "title": "Love in Low Orbit",
+   "year": 2024,
+   "runtimeMin": 114,
+   "genres": [
+    "romance",
+    "scienceFiction"
+   ],
+   "tags": [
+    "space",
+    "slow-burn"
+   ],
+   "logline": "Two astronauts on a six-month mission realise their messages home are being swapped.",
+   "adult": false,
+   "popularity": 70,
+   "posterPath": "/art/demo-0047.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0048",
+   "kind": "film",
+   "title": "The Great Tortoise Race",
+   "year": 2021,
+   "runtimeMin": 83,
+   "genres": [
+    "family",
+    "comedy"
+   ],
+   "tags": [
+    "small-town",
+    "feel-good"
+   ],
+   "logline": "A village tortoise race turns into a feud when a champion breeder moves in next door.",
+   "adult": false,
+   "popularity": 74,
+   "posterPath": "/art/demo-0048.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0049",
+   "kind": "film",
+   "title": "Beneath the Silk Market",
+   "year": 2015,
+   "runtimeMin": 117,
+   "genres": [
+    "mystery",
+    "history"
+   ],
+   "tags": [
+    "codes",
+    "city"
+   ],
+   "logline": "A translator in an old trading city finds a coded ledger that names the next emperor.",
+   "adult": false,
+   "popularity": 57,
+   "posterPath": "/art/demo-0049.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0050",
+   "kind": "film",
+   "title": "Thunder Road Rally",
+   "year": 2019,
+   "runtimeMin": 100,
+   "genres": [
+    "action",
+    "comedy"
+   ],
+   "tags": [
+    "road-trip",
+    "chase"
+   ],
+   "logline": "Three strangers share a getaway car, and none of them is the getaway driver.",
+   "adult": false,
+   "popularity": 72,
+   "posterPath": "/art/demo-0050.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:reelhub",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0051",
+   "kind": "film",
+   "title": "The Mapmakers",
+   "year": 2022,
+   "runtimeMin": 91,
+   "genres": [
+    "documentary",
+    "history"
+   ],
+   "tags": [
+    "quiet",
+    "craft"
+   ],
+   "logline": "Inside the small team still drawing coastlines by hand.",
+   "adult": false,
+   "popularity": 45,
+   "posterPath": "/art/demo-0051.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0052",
+   "kind": "film",
+   "title": "Wolves of the Frozen Pass",
+   "year": 2013,
+   "runtimeMin": 129,
+   "genres": [
+    "action",
+    "adventure"
+   ],
+   "tags": [
+    "survival",
+    "snow"
+   ],
+   "logline": "A courier carries medicine over a mountain pass in a blizzard, with a wolf pack close behind.",
+   "adult": false,
+   "popularity": 63,
+   "posterPath": "/art/demo-0052.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0053",
+   "kind": "film",
+   "title": "The Puppeteer's Apprentice",
+   "year": 2017,
+   "runtimeMin": 122,
+   "genres": [
+    "fantasy",
+    "drama"
+   ],
+   "tags": [
+    "slow-burn",
+    "magic"
+   ],
+   "logline": "A shy apprentice learns her puppets act out what will happen tomorrow.",
+   "adult": false,
+   "popularity": 61,
+   "posterPath": "/art/demo-0053.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "free"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0054",
+   "kind": "film",
+   "title": "Midnight Cassette",
+   "year": 2020,
+   "runtimeMin": 108,
+   "genres": [
+    "music",
+    "mystery"
+   ],
+   "tags": [
+    "twisty",
+    "retro"
+   ],
+   "logline": "A thrift-store cassette holds a song by a band that never existed.",
+   "adult": false,
+   "popularity": 65,
+   "posterPath": "/art/demo-0054.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:streamco",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0055",
+   "kind": "film",
+   "title": "The Treaty Table",
+   "year": 2006,
+   "runtimeMin": 147,
+   "genres": [
+    "war",
+    "history"
+   ],
+   "tags": [
+    "politics",
+    "snow"
+   ],
+   "logline": "Four negotiators snowed into an inn have three days to end a war, or start a new one.",
+   "adult": false,
+   "popularity": 48,
+   "posterPath": "/art/demo-0055.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0056",
+   "kind": "film",
+   "title": "Bunny Brigade",
+   "year": 2023,
+   "runtimeMin": 86,
+   "genres": [
+    "animation",
+    "action"
+   ],
+   "tags": [
+    "feel-good",
+    "garden"
+   ],
+   "logline": "Garden rabbits defend the vegetable patch from a very determined fox.",
+   "adult": false,
+   "popularity": 76,
+   "posterPath": "/art/demo-0056.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0057",
+   "kind": "film",
+   "title": "Dust and Rhinestones",
+   "year": 2012,
+   "runtimeMin": 115,
+   "genres": [
+    "western",
+    "music"
+   ],
+   "tags": [
+    "underdog",
+    "musical"
+   ],
+   "logline": "A rodeo clown who dreams of singing finally gets the county fair stage.",
+   "adult": false,
+   "popularity": 55,
+   "posterPath": "/art/demo-0057.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0058",
+   "kind": "film",
+   "title": "The Inheritance Game",
+   "year": 2021,
+   "runtimeMin": 123,
+   "genres": [
+    "thriller",
+    "mystery"
+   ],
+   "tags": [
+    "whodunit",
+    "family-secrets"
+   ],
+   "logline": "Six cousins race to solve their aunt's last puzzle for the house, and someone is cheating.",
+   "adult": false,
+   "popularity": 69,
+   "posterPath": "/art/demo-0058.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:streamco",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "rent"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0059",
+   "kind": "film",
+   "title": "Snow Globe Holiday",
+   "year": 2018,
+   "runtimeMin": 94,
+   "genres": [
+    "family",
+    "romance"
+   ],
+   "tags": [
+    "cozy",
+    "snow"
+   ],
+   "logline": "A shop owner wakes up inside a snow globe she sells and must get out by the holiday.",
+   "adult": false,
+   "popularity": 72,
+   "posterPath": "/art/demo-0059.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:flixbox",
+      "type": "subscription"
+     }
+    ]
+   }
+  },
+  {
+   "id": "demo:0060",
+   "kind": "film",
+   "title": "The Long Way to Halley",
+   "year": 2025,
+   "runtimeMin": 168,
+   "genres": [
+    "scienceFiction",
+    "adventure"
+   ],
+   "tags": [
+    "space",
+    "epic"
+   ],
+   "logline": "The youngest crew member of a generation ship is the first to doubt they are going anywhere.",
+   "adult": false,
+   "popularity": 64,
+   "posterPath": "/art/demo-0060.png",
+   "availability": {
+    "ZZ": [
+     {
+      "serviceId": "demo:reelhub",
+      "type": "subscription"
+     },
+     {
+      "serviceId": "demo:flixbox",
+      "type": "free"
+     }
+    ]
+   }
+  }
+ ]
 }

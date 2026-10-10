@@ -23,6 +23,9 @@ importers:
 
   apps/phone:
     dependencies:
+      '@couch/client':
+        specifier: workspace:*
+        version: link:../../packages/client
       '@couch/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -73,6 +76,9 @@ importers:
 
   apps/tv:
     dependencies:
+      '@amazon-devices/react-native-async-storage__async-storage':
+        specifier: 2.1.9000000000-rn-83
+        version: 2.1.9000000000-rn-83(@amazon-devices/react-native-kepler@4.0.1(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/node@26.6.5)(@types/react@19.3.0)(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0))(@babel/preset-env@7.29.7(@babel/core@7.29.7))(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0)
       '@amazon-devices/react-native-kepler':
         specifier: ~4.0.0
         version: 4.0.1(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/node@26.6.5)(@types/react@19.3.0)(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0)
@@ -82,6 +88,9 @@ importers:
       '@amazon-devices/react-native-w3cmedia':
         specifier: ~2.3.2
         version: 2.3.2(@amazon-devices/react-native-kepler@4.0.1(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/node@26.6.5)(@types/react@19.3.0)(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0))(@babel/preset-env@7.29.7(@babel/core@7.29.7))(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0)
+      '@couch/client':
+        specifier: workspace:*
+        version: link:../../packages/client
       '@couch/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -192,6 +201,16 @@ importers:
       zod:
         specifier: ^4
         version: 4.6.5
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+
+  packages/client:
+    dependencies:
+      '@couch/protocol':
+        specifier: workspace:*
+        version: link:../protocol
 
   packages/protocol:
     dependencies:
@@ -263,6 +282,13 @@ packages:
   '@amazon-devices/keplerscript-turbomodule-api@1.2.5':
     resolution: {integrity: sha512-zg4vQ7iZLZkoajyjxYtGs293y3+FfpM5de63Xx6sPdIubNLh6Cjf5o7vxPnJ4+SnXOk4IlcSndnGIpJ7vtgJiw==}
     hasBin: true
+
+  '@amazon-devices/react-native-async-storage__async-storage@2.1.9000000000-rn-83':
+    resolution: {integrity: sha512-Byma1lmPKcq/mYvOn2n1RYvIKQoGP8QiDxwyH1gFLZp1rbnUz6UIImHHd1Y7RoblfI0omUkvQXGu3isahnC9Bw==}
+    peerDependencies:
+      '@amazon-devices/react-native-kepler': '*'
+      react: '*'
+      react-native: '*'
 
   '@amazon-devices/react-native-kepler@4.0.1':
     resolution: {integrity: sha512-0jalzgQ3iqa39GKbuDzrUvodk8PpN68uoxQU8VF7r2oUrdOpNllMEDd5IB5llBb5Wt74YeIpKnGwXOyh55XD8A==}
@@ -3700,6 +3726,10 @@ packages:
     resolution: {integrity: sha512-Fd4gABb+ycGAmKou8eMftCupSir5lRxqf4aD/vd0cD2qc4HL07OjCeuHMr8Ro4CoMaeCKDB0/ECBOVWjTwUvPQ==}
     engines: {node: '>=8'}
 
+  is-plain-obj@2.1.0:
+    resolution: {integrity: sha512-YWnfyRwxL/+SsrWYfOpUtz5b3YD+nyfkHvjbcanzk8zgyO4ASD67uVMRt8k5bM4lLMDnXfriRhOpemw+NfT1eA==}
+    engines: {node: '>=8'}
+
   is-plain-object@2.0.4:
     resolution: {integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==}
     engines: {node: '>=0.10.0'}
@@ -4223,6 +4253,10 @@ packages:
   memorystream@0.3.1:
     resolution: {integrity: sha512-S3UwM3yj5mtUSEfP41UZmt/0SCoVYUcU1rkXv+BQ5Ig8ndL4sPoJNBUJERafdPb5jjHJGuMgytgKvKIf58XNBw==}
     engines: {node: '>= 0.10.0'}
+
+  merge-options@3.0.4:
+    resolution: {integrity: sha512-2Sug1+knBjkaMsMgf1ctR1Ujx+Ayku4EdJN4Z+C2+JzoeF7A3OZ9KM2GY0CpQS51NR61LTurMJrRKPhSs3ZRTQ==}
+    engines: {node: '>=10'}
 
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
@@ -5869,6 +5903,17 @@ snapshots:
       jscodeshift: 0.14.0(@babel/preset-env@7.29.7(@babel/core@7.29.7))
       nullthrows: 1.1.1
       yargs: 17.7.3
+    transitivePeerDependencies:
+      - '@babel/preset-env'
+      - supports-color
+
+  '@amazon-devices/react-native-async-storage__async-storage@2.1.9000000000-rn-83(@amazon-devices/react-native-kepler@4.0.1(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/node@26.6.5)(@types/react@19.3.0)(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0))(@babel/preset-env@7.29.7(@babel/core@7.29.7))(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@amazon-devices/keplerscript-turbomodule-api': 1.2.5(@babel/preset-env@7.29.7(@babel/core@7.29.7))
+      '@amazon-devices/react-native-kepler': 4.0.1(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/node@26.6.5)(@types/react@19.3.0)(react-native@0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0))(react@19.2.0)
+      merge-options: 3.0.4
+      react: 19.2.0
+      react-native: 0.83.0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.2.0)
     transitivePeerDependencies:
       - '@babel/preset-env'
       - supports-color
@@ -9881,6 +9926,8 @@ snapshots:
 
   is-path-inside@3.0.3: {}
 
+  is-plain-obj@2.1.0: {}
+
   is-plain-object@2.0.4:
     dependencies:
       isobject: 3.0.1
@@ -10588,6 +10635,10 @@ snapshots:
   memoize-one@5.2.1: {}
 
   memorystream@0.3.1: {}
+
+  merge-options@3.0.4:
+    dependencies:
+      is-plain-obj: 2.1.0
 
   merge-stream@2.0.0: {}
 

@@ -27,3 +27,12 @@ export function saveSeat(roomCode: string, seat: Seat): void {
     // private mode: memory only
   }
 }
+
+export function clearSeat(roomCode: string): void {
+  memory.delete(key(roomCode));
+  try {
+    localStorage.removeItem(key(roomCode));
+  } catch {
+    // storage blocked: memory only
+  }
+}

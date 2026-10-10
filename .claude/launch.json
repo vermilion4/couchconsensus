@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "couch-server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["start"],
+      "port": 8080
+    }
+  ]
+}

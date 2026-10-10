@@ -1,0 +1,13 @@
+{
+  "name": "@couch/client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Room connection shared by the phone page (voter) and the TV app (host): hello, views, acks, reconnect (ADR-0004).",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": { "typecheck": "tsc -p ." },
+  "dependencies": {
+    "@couch/protocol": "workspace:*"
+  }
+}

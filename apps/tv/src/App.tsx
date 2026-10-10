@@ -1,146 +1,171 @@
-// Walking skeleton of the TV flow: Home → Lobby (QR + room code + live connection).
-// Scoreboard and Verdict screens, room restore and the voter list come next.
-import React, {useEffect, useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
-import QRCode from '@amazon-devices/react-native-qrcode-svg';
-import {CreateRoomResponse, PROTOCOL_VERSION, ServerMessage} from '@couch/protocol';
+// The TV (host) app: Home → Lobby → Scoreboard → Verdict, with Resume room after a relaunch (US-12).
+// The server owns the room; the TV renders the TV projection and sends host commands.
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Text, View} from 'react-native';
+import type {Command} from '@couch/client';
+import {CreateRoomResponse} from '@couch/protocol';
 import {color} from '@couch/theme';
 import {SERVER_URL} from './server-url';
+import {clearSession, installId, loadSession, saveSession, type HostSession} from './session';
+import {makeHostClient, useHostClient, type HostClient} from './useHost';
+import {tvScreenFor} from './tv-screen';
+import {Home, Resume, Splash} from './screens/Home';
+import {Lobby} from './screens/Lobby';
+import {Scoreboard} from './screens/Scoreboard';
+import {Closed, Thinking, Verdict} from './screens/Verdict';
+import {sheet, Toast} from './ui';
 
-type Room = {roomCode: string; joinUrl: string; hostToken: string};
-type Conn = 'connecting' | 'connected' | 'reconnecting' | 'rejected';
+/** Sends a host command; a refusal shows as a toast. Resolves true when the server accepted it. */
+export type Send = (cmd: Command) => Promise<boolean>;
 
-// TODO(room restore, US-12): persist this and the host token with AsyncStorage.
-const clientInstallId = `tv-${Math.random().toString(36).slice(2, 12)}`;
+type Mode = 'boot' | 'home' | 'resume' | 'room';
 
 export const App = () => {
-  const [room, setRoom] = useState<Room>();
-  return room ? <Lobby room={room} /> : <Home onRoom={setRoom} />;
-};
-
-const Home = ({onRoom}: {onRoom: (r: Room) => void}) => {
+  const [mode, setMode] = useState<Mode>('boot');
+  const [client, setClient] = useState<HostClient>();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const [focused, setFocused] = useState(false);
+  const [note, setNote] = useState<string>();
+  const [toast, setToast] = useState<string>();
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useHostClient(client);
 
-  const start = async () => {
+  const showToast = useCallback((text: string) => {
+    setToast(text);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(undefined), 4000);
+  }, []);
+
+  const goHome = useCallback(
+    async (message?: string) => {
+      client?.stop();
+      setClient(undefined);
+      await clearSession();
+      setNote(message);
+      setMode('home');
+    },
+    [client],
+  );
+
+  // Boot: reconnect to a saved room if there is one; the first view decides whether to offer Resume.
+  useEffect(() => {
+    void loadSession().then(saved => {
+      if (!saved) return setMode('home');
+      setClient(makeHostClient(saved));
+      setMode('resume');
+    });
+  }, []);
+
+  // A room the server no longer knows (expired, closed, wrong token) sends the TV back home.
+  useEffect(() => {
+    if (client?.state !== 'rejected') return;
+    void goHome(mode === 'resume' ? undefined : 'That room has closed. Start a new one.');
+  }, [client?.state, client, mode, goHome]);
+  useEffect(() => {
+    if (mode === 'resume' && client?.view?.phase === 'closed') void goHome();
+  }, [mode, client?.view?.phase, goHome]);
+
+  // A view the TV can't read would otherwise freeze the screen silently.
+  const protocolError = client?.protocolError;
+  useEffect(() => {
+    if (protocolError) showToast(`Couldn't read the referee: ${protocolError}`);
+  }, [protocolError, showToast]);
+
+  const send: Send = useCallback(
+    async cmd => {
+      if (!client) return false;
+      const r = await client.send(cmd);
+      if (!r.ok) showToast(r.message);
+      return r.ok;
+    },
+    [client, showToast],
+  );
+
+  const create = async () => {
     setBusy(true);
-    setError(undefined);
+    setNote(undefined);
     try {
+      // Starting over from Resume closes the old room so its phones don't wait on a TV that left.
+      if (client) {
+        await Promise.race([client.send({type: 'closeRoom'}), new Promise<void>(r => setTimeout(() => r(), 1000))]);
+        client.stop();
+      }
       const res = await fetch(`${SERVER_URL}/api/rooms`, {
         method: 'POST',
         headers: {'content-type': 'application/json'},
-        body: JSON.stringify({clientInstallId}),
+        body: JSON.stringify({clientInstallId: await installId()}),
       });
-      if (!res.ok) throw new Error(`Server said ${res.status}`);
-      onRoom(CreateRoomResponse.parse(await res.json()));
+      if (!res.ok) throw new Error(`the server said ${res.status}`);
+      const room = CreateRoomResponse.parse(await res.json());
+      const session: HostSession = {roomCode: room.roomCode, joinUrl: room.joinUrl, hostToken: room.hostToken};
+      await saveSession(session);
+      setClient(makeHostClient(session));
+      setMode('room');
     } catch (e) {
-      setError(`Could not reach the referee: ${(e as Error).message}`);
+      setClient(undefined);
+      setMode('home');
+      setNote(`Could not reach the referee: ${(e as Error).message}`);
     } finally {
       setBusy(false);
     }
   };
 
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.brand}>CouchConsensus</Text>
-      <Text style={styles.tagline}>Everyone votes on their phone. The TV picks one movie.</Text>
-      <Pressable
-        hasTVPreferredFocus
-        disabled={busy}
-        onPress={start}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={[styles.button, focused && styles.buttonFocused]}>
-        <Text style={[styles.buttonText, focused && styles.buttonTextFocused]}>{busy ? 'Starting…' : 'Start a room'}</Text>
-      </Pressable>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </View>
-  );
-};
+  const done = async () => {
+    await send({type: 'closeRoom'});
+    await goHome();
+  };
 
-const Lobby = ({room}: {room: Room}) => {
-  const [conn, setConn] = useState<Conn>('connecting');
-
-  useEffect(() => {
-    let ws: WebSocket | undefined;
-    let stopped = false;
-    let retry = 0;
-    const open = () => {
-      ws = new WebSocket(`${SERVER_URL.replace(/^http/, 'ws')}/ws`);
-      ws.onopen = () => {
-        retry = 0;
-        ws?.send(JSON.stringify({type: 'hello', roomCode: room.roomCode, role: 'host', token: room.hostToken}));
-      };
-      ws.onmessage = e => {
-        const parsed = ServerMessage.safeParse(JSON.parse(String(e.data)));
-        if (!parsed.success) return;
-        const m = parsed.data;
-        if (m.type === 'welcome' && m.protocol === PROTOCOL_VERSION) setConn('connected');
-        if (m.type === 'error' && m.fatal) {
-          stopped = true;
-          setConn('rejected');
-        }
-      };
-      ws.onclose = () => {
-        if (stopped) return;
-        setConn('reconnecting');
-        setTimeout(open, Math.min(5000, 500 * 2 ** retry++));
-      };
-    };
-    open();
-    return () => {
-      stopped = true;
-      ws?.close();
-    };
-  }, [room]);
+  const view = client?.view;
+  let screen: React.ReactNode;
+  if (mode === 'boot' || (mode === 'resume' && !view)) screen = <Splash />;
+  else if (mode === 'home' || !client || !view) screen = <Home onStart={create} busy={busy} note={note} />;
+  else if (mode === 'resume') screen = <Resume view={view} onResume={() => setMode('room')} onNew={create} />;
+  else
+    switch (tvScreenFor(view)) {
+      case 'lobby':
+        screen = <Lobby view={view} send={send} />;
+        break;
+      case 'scoreboard':
+        screen = <Scoreboard client={client} view={view} send={send} />;
+        break;
+      case 'thinking':
+        screen = <Thinking />;
+        break;
+      case 'verdict':
+        screen = <Verdict view={view} send={send} onDone={done} />;
+        break;
+      case 'closed':
+        screen = <Closed onHome={() => void goHome()} />;
+        break;
+    }
 
   return (
-    <View style={[styles.screen, styles.lobby]}>
-      <View style={styles.lobbyLeft}>
-        <Text style={styles.label}>Scan to join</Text>
-        <View style={styles.qrBox}>
-          <QRCode value={room.joinUrl} size={360} ecl="M" quietZone={16} />
+    <View style={s.root}>
+      {screen}
+      {mode === 'room' && client?.state === 'reconnecting' ? (
+        <View style={s.pill} accessibilityLiveRegion="polite">
+          <View style={s.dot} />
+          <Text style={s.pillText}>Reconnecting to the referee…</Text>
         </View>
-      </View>
-      <View style={styles.lobbyRight}>
-        <Text style={styles.label}>Room code</Text>
-        <Text style={styles.code}>{room.roomCode}</Text>
-        <Text style={styles.body}>{room.joinUrl}</Text>
-        <Text style={styles.body}>Waiting for at least 2 people to join…</Text>
-        <Text style={[styles.status, conn === 'connected' ? styles.ok : styles.warn]}>● {conn}</Text>
-      </View>
+      ) : null}
+      <Toast text={toast} />
     </View>
   );
 };
 
-// 10-foot type scale: body ≥ 28 px at 1080p (ARCHITECTURE §8). Colors: @couch/theme.
-const styles = StyleSheet.create({
-  screen: {flex: 1, backgroundColor: color.night, padding: 120, justifyContent: 'center'},
-  brand: {color: color.glow, fontSize: 96, fontWeight: '800'},
-  tagline: {color: color.mist, fontSize: 34, marginTop: 16, marginBottom: 64},
-  button: {
-    alignSelf: 'flex-start',
-    paddingVertical: 30,
-    paddingHorizontal: 56,
-    borderRadius: 20,
-    backgroundColor: color.couch,
-    borderWidth: 6,
-    borderColor: 'transparent',
+const s = sheet({
+  root: {flex: 1, backgroundColor: color.night},
+  pill: {
+    position: 'absolute',
+    top: 64,
+    right: 96,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    backgroundColor: color.cushion,
   },
-  // Focus = Fire TV orange + Glow ring; text switches to Night (5.3:1 on orange).
-  buttonFocused: {backgroundColor: color.fireOrange, borderColor: color.glow, transform: [{scale: 1.05}]},
-  buttonText: {color: color.glow, fontSize: 40, fontWeight: '700'},
-  buttonTextFocused: {color: color.night},
-  error: {color: color.error, fontSize: 28, marginTop: 32},
-  lobby: {flexDirection: 'row', alignItems: 'center'},
-  lobbyLeft: {flex: 1, alignItems: 'center'},
-  lobbyRight: {flex: 1},
-  label: {color: color.mist, fontSize: 28, marginBottom: 16},
-  qrBox: {backgroundColor: '#ffffff', padding: 46, borderRadius: 28},
-  code: {color: color.glow, fontSize: 160, fontWeight: '800'},
-  body: {color: color.glow, fontSize: 28, marginTop: 16},
-  status: {fontSize: 28, marginTop: 32},
-  ok: {color: '#5EE6A0'},
-  warn: {color: color.ember},
+  dot: {width: 14, height: 14, borderRadius: 7, backgroundColor: color.ember},
+  pillText: {color: color.glow, fontSize: 26, fontWeight: '600'},
 });
