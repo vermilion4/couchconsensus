@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {TvView} from '@couch/protocol';
-import {lobbyHint, progressLabel, regionName, rulesChips, runtimeLabel, tvScreenFor} from './tv-screen';
+import {lobbyHint, progressLabel, regionName, rulesChips, runtimeLabel, tossLede, tvScreenFor} from './tv-screen';
 
 const base: TvView = {
   audience: 'tv',
@@ -84,5 +84,12 @@ describe('labels', () => {
     expect(regionName('US')).toBe('United States');
     expect(regionName('ZZ')).toBe('Demo catalog');
     expect(regionName('NZ')).toBe('NZ');
+  });
+});
+
+describe('tossLede', () => {
+  it('counts the tied titles, so a five-way sudden-death tie reads right', () => {
+    expect(tossLede(2)).toBe('Two titles tied on every rule. The referee flips a coin.');
+    expect(tossLede(5)).toBe('5 titles tied on every rule. The referee flips a coin.');
   });
 });

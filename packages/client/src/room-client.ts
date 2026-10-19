@@ -1,6 +1,6 @@
 // A connection to the session service (ADR-0004), used by the phone (voter) and the TV (host):
 // hello → welcome → views, commands with acks, newest-view-wins, server clock offset, resend after reconnect.
-import {ServerMessage, type ClientCommand, type ErrorCode, type TvView, type VoterView} from '@couch/protocol';
+import {ServerMessage, TvView, VoterView, type ClientCommand, type ErrorCode} from '@couch/protocol';
 
 export interface SocketLike {
   readyState: number;
@@ -28,6 +28,11 @@ interface Options<R extends Role> {
   socket?: (url: string) => SocketLike;
   now?: () => number;
   schedule?: (fn: () => void, ms: number) => void;
+  /**
+   * Fetches the current view over HTTP (GET /api/rooms/:code/view, ADR-0004). Used when a WebSocket
+   * message is lost or garbled: Vega's WebSocket can mangle a message that spans TCP segments.
+   */
+  fetchView?: () => Promise<unknown>;
 }
 
 const OPEN = 1;
@@ -64,7 +69,7 @@ export class RoomClient<R extends Role = 'voter'> {
   /** Set when the server sent something this client can't read: a protocol mismatch worth surfacing. */
   protocolError: string | undefined;
   /** Counts of server messages handled, and of views dropped and why (diagnostics). */
-  readonly stats = {messages: 0, views: 0, stale: 0, unreadable: 0, invalid: 0, resyncs: 0};
+  readonly stats = {messages: 0, views: 0, stale: 0, unreadable: 0, invalid: 0, recovered: 0, resyncs: 0};
 
   private ws: SocketLike | undefined;
   private welcomed = false;
@@ -106,10 +111,44 @@ export class RoomClient<R extends Role = 'voter'> {
     });
   }
 
-  private resyncIfBehind(rev: number) {
+  private recovering: Promise<void> | undefined;
+
+  /** Fetch the current view over HTTP; one request at a time. */
+  private recover(): Promise<void> {
+    const fetchView = this.opts.fetchView;
+    if (!fetchView || this.stopped) return Promise.resolve();
+    this.recovering ??= fetchView()
+      .then(raw => {
+        const parsed = (this.opts.role === 'host' ? TvView : VoterView).safeParse(raw);
+        if (parsed.success && this.applyView(parsed.data)) {
+          this.stats.recovered++;
+          this.emit();
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => (this.recovering = undefined));
+    return this.recovering;
+  }
+
+  /** Newest view wins; returns whether this one was newer and is now shown. */
+  private applyView(view: TvView | VoterView): boolean {
+    if (view.audience !== (this.opts.role === 'host' ? 'tv' : 'voter')) return false;
+    if (this.view && view.rev <= this.view.rev) {
+      this.stats.stale++;
+      return false;
+    }
+    this.stats.views++;
+    this.view = view as ViewFor<R>;
+    this.clockOffset = view.serverNow - this.now();
+    return true;
+  }
+
+  private async resyncIfBehind(rev: number) {
+    if (this.stopped || !this.view || this.view.rev >= rev) return;
+    await this.recover(); // HTTP first: it can't be garbled the way a WebSocket frame can
     if (this.stopped || !this.view || this.view.rev >= rev) return;
     this.stats.resyncs++;
-    this.ws?.close(); // onclose reconnects
+    this.ws?.close(); // then reconnect: the server sends the current view on attach
   }
 
   private emit() {
@@ -142,6 +181,7 @@ export class RoomClient<R extends Role = 'voter'> {
       this.stats.unreadable++;
       this.protocolError = `unreadable message: ${(e as Error).message}`;
       this.emit();
+      void this.recover(); // the lost message was most likely a view; fetch the current one
       return;
     }
     if (!parsed.success) {
@@ -151,6 +191,7 @@ export class RoomClient<R extends Role = 'voter'> {
       this.protocolError = `${issue?.path.join('.')}: ${issue?.message}`;
       console.warn(`[room-client] dropped invalid server message: ${this.protocolError}`);
       this.emit();
+      void this.recover();
       return;
     }
     const m = parsed.data;
@@ -162,14 +203,7 @@ export class RoomClient<R extends Role = 'voter'> {
         for (const {message} of this.pending.values()) this.ws?.send(JSON.stringify(message));
         break;
       case 'view':
-        if (m.view.audience !== (this.opts.role === 'host' ? 'tv' : 'voter')) return;
-        if (this.view && m.view.rev <= this.view.rev) {
-          this.stats.stale++;
-          return;
-        }
-        this.stats.views++;
-        this.view = m.view as ViewFor<R>;
-        this.clockOffset = m.view.serverNow - this.now();
+        if (!this.applyView(m.view)) return;
         break;
       case 'ack':
       case 'nack': {
@@ -179,7 +213,7 @@ export class RoomClient<R extends Role = 'voter'> {
         p.resolve(m.ok ? {ok: true} : {ok: false, error: m.error, message: m.message});
         // The ack carries the room's rev. A view at that rev should follow; if it never does, the screen
         // would sit on an old state. Reconnecting makes the server send the current view on attach.
-        if (m.ok && this.view && m.rev > this.view.rev) this.schedule(() => this.resyncIfBehind(m.rev), RESYNC_MS);
+        if (m.ok && this.view && m.rev > this.view.rev) this.schedule(() => void this.resyncIfBehind(m.rev), RESYNC_MS);
         break;
       }
       case 'error':

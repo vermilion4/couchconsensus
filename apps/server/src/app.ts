@@ -68,6 +68,24 @@ export async function buildApp(config: Config, roomManager?: RoomManager): Promi
     return seat;
   });
 
+  // The current view over plain HTTP (ADR-0004 fallback). Vega's WebSocket can garble a message that
+  // spans TCP segments; an HTTP response is always read whole, so clients re-fetch here when that happens.
+  app.get<{Params: {code: string}}>('/api/rooms/:code/view', async (req, reply) => {
+    const code = RoomCode.parse(req.params.code.toUpperCase());
+    const token = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1];
+    if (!token) throw new RoomError('UNAUTHORIZED', 'Send the host or seat token');
+    let auth: Auth;
+    try {
+      auth = rooms.authenticate(code, 'host', token);
+    } catch (e) {
+      if (!(e instanceof RoomError) || e.code !== 'UNAUTHORIZED') throw e;
+      auth = rooms.authenticate(code, 'voter', token);
+    }
+    rooms.touch(code, auth);
+    void reply.header('cache-control', 'no-store');
+    return rooms.view(rooms.get(code), auth);
+  });
+
   // ---------- WebSocket ----------
 
   await app.register(fastifyWebsocket, {options: {maxPayload: MAX_MESSAGE_BYTES}});
@@ -147,6 +165,19 @@ export async function buildApp(config: Config, roomManager?: RoomManager): Promi
   } else {
     app.log.warn(`Poster art not found (${config.artDir}); run "node packages/catalog/scripts/build-posters.mjs"`);
   }
+
+  // ---------- TV sound effects (original, TV-8); the TV fetches and plays them through MediaSource ----------
+
+  await app.register(fastifyStatic, {
+    root: config.soundsDir,
+    prefix: '/sounds/',
+    decorateReply: false,
+    maxAge: '7d',
+    immutable: true,
+    setHeaders: (res, path) => {
+      if (path.endsWith('.m4a')) res.header('content-type', 'audio/mp4');
+    },
+  });
 
   // ---------- phone page ----------
 

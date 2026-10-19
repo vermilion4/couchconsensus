@@ -8,6 +8,7 @@ import {color} from '@couch/theme';
 import {SERVER_URL} from './server-url';
 import {clearSession, installId, loadSession, saveSession, type HostSession} from './session';
 import {makeHostClient, useHostClient, type HostClient} from './useHost';
+import {preloadSounds} from './sound';
 import {tvScreenFor} from './tv-screen';
 import {Home, Resume, Splash} from './screens/Home';
 import {Lobby} from './screens/Lobby';
@@ -48,6 +49,7 @@ export const App = () => {
 
   // Boot: reconnect to a saved room if there is one; the first view decides whether to offer Resume.
   useEffect(() => {
+    preloadSounds();
     void loadSession().then(saved => {
       if (!saved) return setMode('home');
       setClient(makeHostClient(saved));
@@ -63,12 +65,6 @@ export const App = () => {
   useEffect(() => {
     if (mode === 'resume' && client?.view?.phase === 'closed') void goHome();
   }, [mode, client?.view?.phase, goHome]);
-
-  // A view the TV can't read would otherwise freeze the screen silently.
-  const protocolError = client?.protocolError;
-  useEffect(() => {
-    if (protocolError) showToast(`Couldn't read the referee: ${protocolError}`);
-  }, [protocolError, showToast]);
 
   const send: Send = useCallback(
     async cmd => {

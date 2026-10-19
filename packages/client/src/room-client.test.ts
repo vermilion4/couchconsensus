@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import type {TvView, VoterView} from '@couch/protocol';
 import {RoomClient, uuid, type SocketLike} from './room-client';
 
@@ -137,7 +137,7 @@ describe('RoomClient', () => {
 });
 
 describe('RoomClient self-heal', () => {
-  it('reconnects for a fresh view when an ack says the room moved on but no newer view arrived', () => {
+  it('reconnects for a fresh view when an ack says the room moved on but no newer view arrived', async () => {
     const later: (() => void)[] = [];
     const c = new RoomClient({
       url: 'ws://x/ws',
@@ -158,8 +158,8 @@ describe('RoomClient self-heal', () => {
     first.receive({type: 'ack', cmdId: (first.sent.at(-1) as {cmdId: string}).cmdId, ok: true, rev: 7});
 
     later.shift()!(); // the check: still on rev 5
+    await vi.waitFor(() => expect(first.readyState).toBe(3)); // closed on purpose
     expect(FakeSocket.all).toHaveLength(1);
-    expect(first.readyState).toBe(3); // closed on purpose
     later.shift()!(); // the reconnect
     expect(FakeSocket.all).toHaveLength(2);
   });
@@ -186,6 +186,57 @@ describe('RoomClient self-heal', () => {
     later.shift()!();
     expect(sock().readyState).toBe(1);
     expect(later).toHaveLength(0);
+  });
+});
+
+describe('RoomClient HTTP fallback (ADR-0004)', () => {
+  const make = (fetchView: () => Promise<unknown>, later: (() => void)[] = []) => {
+    FakeSocket.all = [];
+    const c = new RoomClient({
+      url: 'ws://x/ws',
+      roomCode: 'KDRM',
+      role: 'voter',
+      token: 't'.repeat(43),
+      socket: url => new FakeSocket(url),
+      now: () => 1_000_500,
+      schedule: fn => void later.push(fn),
+      fetchView,
+    });
+    c.start();
+    sock().open();
+    sock().receive({type: 'welcome', role: 'voter', protocol: 1});
+    sock().receive({type: 'view', view: view(5)});
+    return c;
+  };
+
+  it('fetches the view over HTTP when a WebSocket message arrives garbled', async () => {
+    const c = make(async () => view(9, {phase: 'verdict'}));
+    sock().onmessage?.({data: '"The Long March Home","year":2008}'}); // what Vega delivered on device
+    await vi.waitFor(() => expect(c.view?.rev).toBe(9));
+    expect(c.view?.phase).toBe('verdict');
+    expect(c.stats).toMatchObject({unreadable: 1, recovered: 1});
+    expect(FakeSocket.all).toHaveLength(1); // no reconnect needed
+  });
+
+  it('uses HTTP first when an ack is ahead of the view, and keeps the socket', async () => {
+    const later: (() => void)[] = [];
+    const c = make(async () => view(7), later);
+    void c.send({type: 'setMood', chips: ['funny']});
+    sock().receive({type: 'ack', cmdId: (sock().sent.at(-1) as {cmdId: string}).cmdId, ok: true, rev: 7});
+    later.shift()!();
+    await vi.waitFor(() => expect(c.view?.rev).toBe(7));
+    expect(sock().readyState).toBe(1);
+  });
+
+  it('reconnects when the HTTP view is no newer either', async () => {
+    const later: (() => void)[] = [];
+    const c = make(async () => view(5), later);
+    void c.send({type: 'setMood', chips: ['funny']});
+    const first = sock();
+    first.receive({type: 'ack', cmdId: (first.sent.at(-1) as {cmdId: string}).cmdId, ok: true, rev: 7});
+    later.shift()!();
+    await vi.waitFor(() => expect(first.readyState).toBe(3));
+    expect(c.view?.rev).toBe(5);
   });
 });
 

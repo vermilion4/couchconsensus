@@ -29,3 +29,14 @@ Schemas: [DATA_MODEL.md §5](../DATA_MODEL.md#5-wire-protocol).
 
 - One projection function per audience is the privacy boundary and gets dedicated tests.
 - Polling fallback keeps a 1 s worst-case lag, which still meets SV-2 for the TV.
+
+## Update (2026-10-19): the HTTP fallback is required on Vega
+
+- **Finding:** on the Vega Virtual Device, some WebSocket text frames reach JavaScript garbled.
+  - It happens reliably for a 3.1 KB coin-toss verdict, and intermittently for ~1.5 KB frames sent right after another frame.
+  - It fits frames that span TCP segments (FRICTION_LOG #17).
+- **Fix:** the fallback endpoint is now implemented: `GET /api/rooms/:code/view` with `Authorization: Bearer <host or seat token>`.
+  - `RoomClient` calls it when a message is unreadable or invalid, or when an `ack`'s `rev` stays ahead of the last view for 1.5 s.
+  - If HTTP is no newer either, it reconnects; the server sends the current view on attach.
+- **Verified on the device:** a sudden-death round ending in a five-way coin toss used the HTTP path twice and reached the verdict without freezing.
+

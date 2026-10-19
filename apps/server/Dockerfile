@@ -17,8 +17,10 @@ WORKDIR /app
 COPY --from=build /repo/apps/server/dist ./apps/server/dist
 COPY --from=build /repo/apps/phone/dist ./apps/phone/dist
 COPY --from=build /repo/packages/catalog/art ./art
+COPY --from=build /repo/apps/server/sounds ./sounds
 ENV PHONE_DIST_DIR=/app/apps/phone/dist
 ENV ART_DIR=/app/art
+ENV SOUNDS_DIR=/app/sounds
 EXPOSE 8080
 USER node
 CMD ["node", "--enable-source-maps", "apps/server/dist/index.js"]

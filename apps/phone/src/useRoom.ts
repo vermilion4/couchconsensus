@@ -5,7 +5,14 @@ import {RoomClient} from '@couch/client';
 export function useRoom(roomCode: string, seatToken: string) {
   const client = useMemo(() => {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    return new RoomClient({url: `${proto}://${location.host}/ws`, roomCode, role: 'voter', token: seatToken});
+    return new RoomClient({
+      url: `${proto}://${location.host}/ws`,
+      roomCode,
+      role: 'voter',
+      token: seatToken,
+      fetchView: () =>
+        fetch(`/api/rooms/${roomCode}/view`, {headers: {authorization: `Bearer ${seatToken}`}}).then(r => (r.ok ? r.json() : undefined)),
+    });
   }, [roomCode, seatToken]);
   const [, rerender] = useReducer((n: number) => n + 1, 0);
 

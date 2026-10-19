@@ -25,6 +25,26 @@ describe('session service skeleton', () => {
     expect(res.headers['content-type']).toBe('image/png');
   });
 
+  it('serves the TV sound effects as AAC', async () => {
+    const res = await app.inject('/sounds/whistle.m4a');
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toBe('audio/mp4');
+  });
+
+  it('returns the current view over HTTP, the fallback when a WebSocket message is lost (ADR-0004)', async () => {
+    const {roomCode, hostToken} = await createRoom();
+    const tv = await app.inject({url: `/api/rooms/${roomCode}/view`, headers: {authorization: `Bearer ${hostToken}`}});
+    expect(tv.statusCode).toBe(200);
+    expect(tv.json()).toMatchObject({audience: 'tv', roomCode, phase: 'lobby'});
+
+    const seat = (await app.inject({method: 'POST', url: `/api/rooms/${roomCode}/seats`, payload: {nickname: 'Ada'}})).json();
+    const phone = await app.inject({url: `/api/rooms/${roomCode}/view`, headers: {authorization: `Bearer ${seat.seatToken}`}});
+    expect(phone.json()).toMatchObject({audience: 'voter', me: {nickname: 'Ada'}});
+
+    const nobody = await app.inject({url: `/api/rooms/${roomCode}/view`, headers: {authorization: `Bearer ${'x'.repeat(43)}`}});
+    expect(nobody.statusCode).toBe(401);
+  });
+
   it('reports health', async () => {
     const res = await app.inject('/healthz');
     expect(res.json()).toMatchObject({ok: true, protocol: 1});

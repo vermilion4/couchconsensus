@@ -16,3 +16,6 @@ spikes/s3-bedrock/results*.json
 # CDK lookup cache; contains the AWS account id
 infra/cdk.context.json
 .venv/
+
+# testreel recordings (apps/demo)
+demo

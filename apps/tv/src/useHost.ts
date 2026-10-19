@@ -7,7 +7,17 @@ import type {HostSession} from './session';
 export type HostClient = RoomClient<'host'>;
 
 export function makeHostClient(s: HostSession): HostClient {
-  return new RoomClient({url: `${SERVER_URL.replace(/^http/, 'ws')}/ws`, roomCode: s.roomCode, role: 'host', token: s.hostToken});
+  return new RoomClient({
+    url: `${SERVER_URL.replace(/^http/, 'ws')}/ws`,
+    roomCode: s.roomCode,
+    role: 'host',
+    token: s.hostToken,
+    // Vega's WebSocket can garble a message that spans TCP segments; HTTP recovers the current view.
+    fetchView: () =>
+      fetch(`${SERVER_URL}/api/rooms/${s.roomCode}/view`, {headers: {authorization: `Bearer ${s.hostToken}`}}).then(r =>
+        r.ok ? r.json() : undefined,
+      ),
+  });
 }
 
 /** Starts the client on mount, stops it on unmount, and re-renders on every change. */

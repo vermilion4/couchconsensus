@@ -1,8 +1,9 @@
 // Dev helper: plays the TV and extra voters so one person can test the phone page.
-// Usage: node scripts/demo-bots.mjs [baseUrl] [botCount] [--room CODE] [--delay ms]
+// Usage: node scripts/demo-bots.mjs [baseUrl] [botCount] [--room CODE] [--delay ms] [--strategy yes-first|no]
 // Without --room: creates a room, prints the join URL, waits for one human to join, starts the round,
 // and has the bots vote (first card yes, the rest no). The TV connection stays open.
 // With --room: the real TV app is the host; the bots join its room and vote one card every --delay ms.
+// --strategy no: every bot says no to everything, which forces sudden death and then a coin toss.
 import WebSocket from 'ws';
 
 const flags = process.argv.slice(2);
@@ -12,6 +13,7 @@ const flag = name => {
 };
 const roomFlag = flag('--room');
 const delay = Number(flag('--delay') ?? 0);
+const strategy = flag('--strategy') ?? 'yes-first';
 const base = flags[0] ?? 'http://localhost:8080';
 const bots = Number(flags[1] ?? 1);
 const NAMES = ['Sam', 'Ada', 'Kofi', 'Mia', 'Lena', 'Raj', 'Tomás', 'Yui'];
@@ -59,7 +61,7 @@ for (let b = 0; b < bots; b++) {
         sentFor = key;
         // bots get slower the later they joined, so the scoreboard rows spread out
         const wait = delay * (1 + b * 0.6);
-        const vote = () => s.send(JSON.stringify({type: 'vote', cmdId: id(), roundNo: m.view.round.no, cardIndex: card, value: card === 0 ? 'yes' : 'no'}));
+        const vote = () => s.send(JSON.stringify({type: 'vote', cmdId: id(), roundNo: m.view.round.no, cardIndex: card, value: strategy === 'yes-first' && card === 0 ? 'yes' : 'no'}));
         wait ? setTimeout(vote, wait) : vote();
       }
     }

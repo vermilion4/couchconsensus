@@ -69,3 +69,6 @@ const REGIONS: Record<string, string> = {
 
 /** Hermes on Vega has no Intl.DisplayNames, so the regions we expect are named here. */
 export const regionName = (code: string): string => REGIONS[code] ?? code;
+
+export const tossLede = (n: number): string =>
+  `${n === 2 ? 'Two' : n} titles tied on every rule. The referee flips a coin.`;
