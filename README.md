@@ -2,7 +2,9 @@
 
 Ends the "what should we watch?" argument in under three minutes. The TV shows a QR code, everyone votes on their own phone, and the TV announces one pick, why it won, and where to stream it.
 
-Built for the Fire TV track (Vega OS, React Native for Vega) and the AWS Builder challenge: Claude Haiku 4.5 on Amazon Bedrock for the AI features, and an AWS CDK stack for ECS Fargate, CloudFront and DynamoDB. The AWS account was still awaiting activation at submission time;
+Built for the Fire TV track (Vega OS, React Native for Vega) and the AWS Builder challenge: Claude Haiku 4.5 on Amazon Bedrock for the AI features, and an AWS CDK stack for ECS Fargate, CloudFront and DynamoDB. The AWS account was still awaiting activation at submission time.
+
+https://github.com/user-attachments/assets/3f6ea746-daf1-4a40-a929-ce7abc92ea9e
 
 ## What it does
 
