@@ -55,3 +55,25 @@ Upgrade path if output quality disappoints in testing: **Claude Sonnet 5.5**, sa
 - Structured outputs on Haiku 4.5 via InvokeModel are unverified; the spike harness tests both `output_config.format` and a strict tool, and the adapter uses whichever passes.
 - Cost is negligible: ~2 calls per round, < 3 K tokens each.
 - AI improves the experience but never gates it; the core tier (Oct 17) ships with `AI_MODE=off`.
+
+## Implementation notes (2026-10-19)
+
+- **Code:** `apps/server/src/ai/`.
+  - `port.ts`: the `AiPort` interface and Zod answer schemas.
+  - `requests.ts`: aggregates only; nicknames scrubbed from mood text.
+  - `guard.ts`: `withBudget`, `acceptShortlist`, `acceptReason`.
+  - `bedrock.ts`: `AnthropicBedrock` client with `maxRetries: 0`; `output_config.format` JSON schema, re-checked with Zod.
+  - `RoomManager` schedules both tasks off the request path and reports each outcome through `onAiEvent`, which is logged.
+- **AI-2 holds the verdict in `tally`.** With AI on, a finished round enters `tally`, where both clients already show "The referee is thinking…".
+  - The verdict is revealed with the AI reason when it passes the checks, otherwise with the template.
+  - The tick reveals the template at `REVEAL_DEADLINE_MS` (3 s) even if the manager never answers.
+  - Every reveal bumps `rev`.
+- **AI-1 does not delay Start.** The shortlist is built 1 s after the last mood or rules change and stored as `room.preparedDeck`, keyed by `deckInputsKey`.
+  - Start deals it only if the key still matches, topping up from the rule-based ranking. Otherwise Start deals the rule-based deck immediately.
+  - This is simpler than waiting out the remaining budget on Start, and keeps Start instant.
+- **No prompt caching.** The fixed system prompts are far below Haiku 4.5's minimum cacheable prefix, so a cache breakpoint would silently do nothing. Latency is dominated by output tokens anyway.
+- **Verified 2026-10-19 against the real account (still blocked):**
+  - Both calls reached Bedrock and failed with `400 Operation not allowed`.
+  - The template verdict appeared 158 ms after the round ended, with no server errors.
+  - Still unverified until access opens: whether Haiku 4.5 on InvokeModel accepts `output_config.format`. If it returns 400, the answer falls back, and switching the adapter to a strict tool is the planned change.
+

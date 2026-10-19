@@ -14,6 +14,8 @@ import {
   type ServerMessage,
 } from '@couch/protocol';
 import type {Config} from './config';
+import {loadDemoCatalog} from '@couch/catalog';
+import {BedrockAi, bedrockClient} from './ai/bedrock';
 import {RoomError, RoomManager, type Auth} from './rooms/room-manager';
 
 const HTTP_STATUS: Record<RoomError['code'], number> = {
@@ -24,8 +26,15 @@ const HTTP_STATUS: Record<RoomError['code'], number> = {
   WRONG_PHASE: 409,
 };
 
-export async function buildApp(config: Config, rooms = new RoomManager()): Promise<FastifyInstance> {
+export async function buildApp(config: Config, roomManager?: RoomManager): Promise<FastifyInstance> {
   const app = Fastify({logger: {level: config.logLevel}, bodyLimit: MAX_MESSAGE_BYTES});
+  const rooms =
+    roomManager ??
+    new RoomManager(loadDemoCatalog(), Date.now, {
+      ...(config.aiMode === 'on' ? {ai: new BedrockAi(bedrockClient(config.awsRegion), config.bedrockModelId)} : {}),
+      // Every Bedrock outcome is logged: source, latency and why a fallback was used (AWS write-up).
+      onAiEvent: event => app.log.info({ai: event}, `ai ${event.task}: ${event.outcome}`),
+    });
   rooms.start();
   app.addHook('onClose', async () => rooms.stop());
 

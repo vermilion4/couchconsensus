@@ -12,7 +12,7 @@ import {
   type VoterCommand,
 } from '@couch/protocol';
 import {rankTitles} from '@couch/referee';
-import {buildDeck} from './deck';
+import {buildDeck, deckInputsKey} from './deck';
 import {OK, fail, type Actor, type Ctx, type Result, type Room, type Round, type Voter} from './model';
 import {buildVerdict} from './verdict';
 
@@ -81,8 +81,28 @@ export function setConnected(room: Room, voterId: string, connected: boolean, no
   room.rev++;
 }
 
+/**
+ * How long a finished round may wait in tally for the AI reason before the template is shown.
+ * The verdict must land within 3 s of the round ending (NFR Speed); the AI call itself gets 2.5 s.
+ */
+export const REVEAL_DEADLINE_MS = 3_000;
+
+/** Ends the tally: shows the verdict, with the AI reason when one arrived in time. Once per verdict. */
+export function revealVerdict(room: Room, aiReason?: string): boolean {
+  if (room.phase !== 'tally' || !room.verdict) return false;
+  if (aiReason) {
+    room.verdict.reason = aiReason;
+    room.verdict.reasonSource = 'ai';
+  }
+  room.phase = 'verdict';
+  delete room.revealAt;
+  room.rev++;
+  return true;
+}
+
 /** Called on every timer tick: ends the round when time is up, or when everyone still around has finished. */
 export function onTick(room: Room, ctx: Ctx): boolean {
+  if (room.phase === 'tally') return room.revealAt !== undefined && ctx.now >= room.revealAt && revealVerdict(room);
   if (!voting(room)) return false;
   const round = currentRound(room)!;
   const reason = ctx.now >= round.endsAt ? 'timer' : everyoneFinished(room, ctx.now) ? 'allDone' : undefined;
@@ -233,7 +253,12 @@ function deal(room: Room, kind: 'main' | 'suddenDeath', ctx: Ctx): void {
   const dealt = room.rounds.flatMap(r => r.deck.map(c => c.titleId));
   const base = {catalog: ctx.catalog, rules: room.rules, region: room.region, moods: room.moods};
   const size = kind === 'main' ? room.rules.deckSize : SUDDEN_DEATH_CARDS;
-  let titles = buildDeck({...base, exclude: dealt, size});
+  // AI-1: a shortlist prepared in the lobby leads the deck while its inputs still match (ADR-0008).
+  const prepared =
+    kind === 'main' && room.preparedDeck?.inputsHash === deckInputsKey(room)
+      ? room.preparedDeck.titleIds.filter(id => !dealt.includes(id)).slice(0, size)
+      : [];
+  let titles = [...prepared, ...buildDeck({...base, exclude: [...dealt, ...prepared], size: size - prepared.length})];
   if (titles.length === 0) {
     // Catalog exhausted: reuse what the rules allow (sudden death prefers titles nobody vetoed).
     const parent = currentRound(room);
@@ -248,7 +273,7 @@ function deal(room: Room, kind: 'main' | 'suddenDeath', ctx: Ctx): void {
     kind,
     ...(parentNo !== undefined ? {parentNo} : {}),
     deck: titles.map((titleId, index) => ({index, titleId})),
-    deckSource: 'rules',
+    deckSource: prepared.length > 0 ? 'ai' : 'rules',
     startedAt: ctx.now,
     endsAt: ctx.now + seconds * 1000,
     allowVeto: kind === 'main',
@@ -278,7 +303,11 @@ function endRound(room: Room, reason: 'allDone' | 'timer' | 'host', ctx: Ctx): v
   }
   room.verdict = buildVerdict(round, tally, voterIds.length, ctx.catalog, ctx.now);
   room.verdictCursor = 0;
-  room.phase = 'verdict';
+  if (ctx.aiReasons) {
+    // The TV shows "The referee is thinking…" while Bedrock writes the reason; the template is the fallback.
+    room.phase = 'tally';
+    room.revealAt = ctx.now + REVEAL_DEADLINE_MS;
+  } else room.phase = 'verdict';
 }
 
 /** "Sam", "Sam 2", … case-insensitive (invariant I9). Stays within 12 chars. */

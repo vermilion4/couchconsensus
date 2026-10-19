@@ -2,7 +2,7 @@
   "name": "@couch/server",
   "version": "0.0.0",
   "private": true,
-  "description": "Session service: rooms, votes, timer, referee (ARCHITECTURE \u00a75).",
+  "description": "Session service: rooms, votes, timer, referee (ARCHITECTURE §5).",
   "type": "module",
   "scripts": {
     "dev": "PHONE_PORT=5173 tsx watch src/index.ts",
@@ -11,12 +11,15 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "^0.35.0",
+    "@anthropic-ai/sdk": "^0.135.0",
     "@couch/catalog": "workspace:*",
     "@couch/protocol": "workspace:*",
     "@couch/referee": "workspace:*",
     "@fastify/static": "^10.1.6",
     "@fastify/websocket": "^11.3.4",
-    "fastify": "^5.12.5"
+    "fastify": "^5.12.5",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

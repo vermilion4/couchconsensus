@@ -1,7 +1,8 @@
 import {randomUUID} from 'node:crypto';
 import {beforeEach, describe, expect, it} from 'vitest';
 import type {ClientCommand, VoteValue} from '@couch/protocol';
-import {apply, newRoom, onTick, seatVoter, setConnected} from './lifecycle';
+import {deckInputsKey} from './deck';
+import {REVEAL_DEADLINE_MS, apply, newRoom, onTick, revealVerdict, seatVoter, setConnected} from './lifecycle';
 import type {Actor, Ctx, Room} from './model';
 import {TEST_CATALOG} from './test-catalog';
 
@@ -260,5 +261,65 @@ describe('after the verdict', () => {
     expect(apply(room, HOST, cmd('closeRoom'), ctx())).toEqual({ok: true});
     expect(room.phase).toBe('closed');
     expect(seatVoter(room, {id: 'x', nickname: 'x', seatTokenHash: 'x'}, now)).toMatchObject({ok: false, error: 'WRONG_PHASE'});
+  });
+});
+
+describe('with AI on (ADR-0008)', () => {
+  const aiCtx = (): Ctx => ({...ctx(), aiReasons: true});
+  const endWithYesOnFirst = (room: Room) => {
+    start(room);
+    const n = room.rounds[0]!.deck.length;
+    for (const id of ['sam', 'ada'])
+      for (let i = 0; i < n; i++) {
+        const round = room.rounds.at(-1)!;
+        apply(room, voter(id), cmd('vote', {roundNo: round.no, cardIndex: i, value: i === 0 ? 'yes' : 'no'}), aiCtx());
+      }
+  };
+
+  it('a finished round waits in tally for the reason, with the template ready as a fallback', () => {
+    const room = roomWith('sam', 'ada');
+    endWithYesOnFirst(room);
+    expect(room.phase).toBe('tally');
+    expect(room.verdict?.reasonSource).toBe('template');
+    expect(room.revealAt).toBe(now + REVEAL_DEADLINE_MS);
+  });
+
+  it('revealing with an AI reason shows it and bumps rev', () => {
+    const room = roomWith('sam', 'ada');
+    endWithYesOnFirst(room);
+    const rev = room.rev;
+    expect(revealVerdict(room, 'Two cozy votes, one clear winner.')).toBe(true);
+    expect(room).toMatchObject({phase: 'verdict', verdict: {reason: 'Two cozy votes, one clear winner.', reasonSource: 'ai'}});
+    expect(room.rev).toBeGreaterThan(rev);
+    expect(room.revealAt).toBeUndefined();
+    expect(revealVerdict(room, 'again')).toBe(false); // only once
+  });
+
+  it('the tick reveals the template reason if the AI is late', () => {
+    const room = roomWith('sam', 'ada');
+    endWithYesOnFirst(room);
+    now += REVEAL_DEADLINE_MS - 1;
+    expect(onTick(room, aiCtx())).toBe(false);
+    now += 1;
+    expect(onTick(room, aiCtx())).toBe(true);
+    expect(room).toMatchObject({phase: 'verdict', verdict: {reasonSource: 'template'}});
+  });
+
+  it('deals a prepared AI shortlist when the moods and rules still match, topped up to 15', () => {
+    const room = roomWith('sam', 'ada');
+    const picks = [TEST_CATALOG.titles[3]!.id, TEST_CATALOG.titles[1]!.id];
+    room.preparedDeck = {inputsHash: deckInputsKey(room), titleIds: picks, source: 'ai', builtAt: now};
+    start(room);
+    const round = room.rounds[0]!;
+    expect(round.deckSource).toBe('ai');
+    expect(round.deck.slice(0, 2).map(c => c.titleId)).toEqual(picks);
+    expect(new Set(round.deck.map(c => c.titleId)).size).toBe(round.deck.length); // no repeats from the top-up
+  });
+
+  it('ignores a prepared shortlist built for different moods', () => {
+    const room = roomWith('sam', 'ada');
+    room.preparedDeck = {inputsHash: 'stale', titleIds: [TEST_CATALOG.titles[3]!.id], source: 'ai', builtAt: now};
+    start(room);
+    expect(room.rounds[0]!.deckSource).toBe('rules');
   });
 });

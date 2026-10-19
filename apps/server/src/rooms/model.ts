@@ -66,6 +66,15 @@ export interface Verdict {
   decidedAt: number;
 }
 
+/** A speculative AI-1 shortlist built in the lobby (DATA_MODEL §3.8). */
+export interface PreparedDeck {
+  /** deckInputsKey(room) when it was built; stale once moods, rules or region change. */
+  inputsHash: string;
+  titleIds: TitleId[];
+  source: 'ai';
+  builtAt: number;
+}
+
 export interface Room {
   schemaVersion: 1;
   id: string;
@@ -86,6 +95,9 @@ export interface Room {
   /** Index into verdict.rankingIds currently on screen (Runner-up advances it). */
   verdictCursor: number;
   verdict?: Verdict;
+  /** In the tally phase: when to show the verdict with the template reason if the AI reason is late. */
+  revealAt?: number;
+  preparedDeck?: PreparedDeck;
   hostLastSeenAt: number;
   /** Last 64 command ids from the TV (idempotency, ADR-0004). */
   hostRecentCmdIds?: string[];
@@ -96,6 +108,8 @@ export type Actor = {role: 'host'} | {role: 'voter'; voterId: string};
 export interface Ctx {
   now: number;
   catalog: CatalogFile;
+  /** AI-2 is on: a finished round waits briefly in tally for the AI-written reason. */
+  aiReasons?: boolean;
 }
 
 export type Result = {ok: true} | {ok: false; error: ErrorCode; message: string};

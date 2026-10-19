@@ -1,11 +1,17 @@
 // Holds live rooms, their open sockets and the timer loop; applies commands through the pure
 // lifecycle and pushes a fresh audience projection to every client after each change (ADR-0003, ADR-0004).
 // Single process: JavaScript runs one handler at a time, so commands for a room never interleave.
+// It also runs the two Bedrock tasks (ADR-0008) off the request path: AI-1 prepares a shortlist while
+// the room sits in the lobby, AI-2 writes the verdict reason during tally. Both always have a fallback.
 // DynamoDB persistence (ADR-0003) plugs in here next.
 import {randomUUID} from 'node:crypto';
 import {loadDemoCatalog, type CatalogFile} from '@couch/catalog';
 import type {ClientCommand, ErrorCode, ServerMessage} from '@couch/protocol';
-import {apply, newRoom, onTick, seatVoter, setConnected} from './lifecycle';
+import {acceptReason, acceptShortlist, withBudget} from '../ai/guard';
+import type {AiPort} from '../ai/port';
+import {deckAsk, reasonAsk} from '../ai/requests';
+import {deckInputsKey} from './deck';
+import {apply, newRoom, onTick, revealVerdict, seatVoter, setConnected} from './lifecycle';
 import type {Actor, Ctx, Result, Room} from './model';
 import {projectTv, projectVoter} from './projections';
 import {hashToken, newRoomCode, newToken, newVoterId, tokenMatches} from './tokens';
@@ -33,18 +39,52 @@ interface Attached {
 
 const TICK_MS = 500;
 
+/** One Bedrock call's outcome, for the logs and the AWS write-up. */
+export interface AiEvent {
+  task: 'deck' | 'reason';
+  outcome: 'ai' | 'fallback';
+  ms: number;
+  error?: string;
+}
+
+export interface AiOptions {
+  /** Unset = AI off: rule-based decks and template reasons only (AI_MODE=off). */
+  ai?: AiPort;
+  /** Wait this long after the last mood or rules change before building a shortlist. */
+  deckDebounceMs?: number;
+  deckBudgetMs?: number;
+  /** Must stay under REVEAL_DEADLINE_MS so the verdict lands within 3 s. */
+  reasonBudgetMs?: number;
+  onAiEvent?: (event: AiEvent) => void;
+}
+
 export class RoomManager {
   private rooms = new Map<string, Room>();
   private sockets = new Map<string, Set<Attached>>();
   private timer: NodeJS.Timeout | undefined;
+  private readonly ai: AiPort | undefined;
+  private readonly aiOpts: Required<Omit<AiOptions, 'ai' | 'onAiEvent'>> & Pick<AiOptions, 'onAiEvent'>;
+  /** Per room: the deck inputs a shortlist is scheduled or being built for, and its debounce timer. */
+  private deckBuilds = new Map<string, {key: string; timer?: NodeJS.Timeout}>();
+  /** Verdicts (code:decidedAt) whose reason is being written. */
+  private reasonsInFlight = new Set<string>();
 
   constructor(
     private readonly catalog: CatalogFile = loadDemoCatalog(),
     private readonly now: () => number = Date.now,
-  ) {}
+    opts: AiOptions = {},
+  ) {
+    this.ai = opts.ai;
+    this.aiOpts = {
+      deckDebounceMs: opts.deckDebounceMs ?? 1_000,
+      deckBudgetMs: opts.deckBudgetMs ?? 3_000,
+      reasonBudgetMs: opts.reasonBudgetMs ?? 2_500,
+      ...(opts.onAiEvent ? {onAiEvent: opts.onAiEvent} : {}),
+    };
+  }
 
   private ctx(): Ctx {
-    return {now: this.now(), catalog: this.catalog};
+    return {now: this.now(), catalog: this.catalog, ...(this.ai ? {aiReasons: true} : {})};
   }
 
   /** Starts the timer loop (round deadlines, dropped voters, expiry). */
@@ -56,6 +96,8 @@ export class RoomManager {
   stop(): void {
     clearInterval(this.timer);
     this.timer = undefined;
+    for (const b of this.deckBuilds.values()) clearTimeout(b.timer);
+    this.deckBuilds.clear();
   }
 
   tick(): void {
@@ -166,5 +208,64 @@ export class RoomManager {
       if (auth.role === 'voter' && room.voters.find(v => v.id === auth.voterId)?.kicked) continue;
       conn.send({type: 'view', view: this.view(room, auth)});
     }
+    this.afterChange(room);
+  }
+
+  /** Every visible change passes through here; start whatever AI work the new state calls for. */
+  private afterChange(room: Room): void {
+    if (!this.ai) return;
+    if (room.phase === 'lobby') this.scheduleDeck(room);
+    else if (room.phase === 'tally') void this.writeReason(room);
+  }
+
+  private scheduleDeck(room: Room): void {
+    const key = deckInputsKey(room);
+    const current = this.deckBuilds.get(room.code);
+    if (room.preparedDeck?.inputsHash === key || current?.key === key) return;
+    clearTimeout(current?.timer);
+    const build = {key, timer: setTimeout(() => void this.buildDeck(room.code, key), this.aiOpts.deckDebounceMs)};
+    build.timer.unref?.();
+    this.deckBuilds.set(room.code, build);
+  }
+
+  private async buildDeck(code: string, key: string): Promise<void> {
+    const room = this.rooms.get(code);
+    const ask = room && room.phase === 'lobby' && deckInputsKey(room) === key ? deckAsk(room, this.catalog) : undefined;
+    if (!ask) {
+      if (this.deckBuilds.get(code)?.key === key) this.deckBuilds.delete(code);
+      return;
+    }
+    const started = this.now();
+    const r = await withBudget(signal => this.ai!.deck(ask, signal), this.aiOpts.deckBudgetMs);
+    if (this.deckBuilds.get(code)?.key === key) this.deckBuilds.delete(code);
+    const ids = r.ok ? acceptShortlist(r.value.shortlist, ask.candidates.map(c => c.id), ask.deckSize) : [];
+    const fresh = this.rooms.get(code);
+    // Moods or rules may have changed while Bedrock was answering; a stale shortlist is dropped.
+    const usable = ids.length > 0 && fresh?.phase === 'lobby' && deckInputsKey(fresh) === key;
+    if (usable) fresh.preparedDeck = {inputsHash: key, titleIds: ids, source: 'ai', builtAt: this.now()};
+    const error = !r.ok ? r.error : !ids.length ? 'no valid ids' : !usable ? 'stale' : undefined;
+    this.report({task: 'deck', outcome: usable ? 'ai' : 'fallback', ms: this.now() - started, ...(error ? {error} : {})});
+  }
+
+  private async writeReason(room: Room): Promise<void> {
+    const decidedAt = room.verdict?.decidedAt;
+    const id = `${room.code}:${decidedAt}`;
+    if (decidedAt === undefined || this.reasonsInFlight.has(id)) return;
+    this.reasonsInFlight.add(id);
+    const ask = reasonAsk(room, this.catalog);
+    const started = this.now();
+    const r = ask ? await withBudget(signal => this.ai!.reason(ask.request, signal), this.aiOpts.reasonBudgetMs) : undefined;
+    this.reasonsInFlight.delete(id);
+    const reason = r?.ok ? acceptReason(r.value, ask!.titles) : undefined;
+    const fresh = this.rooms.get(room.code);
+    // The tick may already have shown the template (deadline passed); then this answer is too late.
+    const shown = fresh?.verdict?.decidedAt === decidedAt && revealVerdict(fresh, reason);
+    if (shown) this.broadcast(fresh);
+    const error = !r ? 'no request' : !r.ok ? r.error : !reason ? 'rejected by checks' : !shown ? 'late' : undefined;
+    this.report({task: 'reason', outcome: reason && shown ? 'ai' : 'fallback', ms: this.now() - started, ...(error ? {error} : {})});
+  }
+
+  private report(event: AiEvent): void {
+    this.aiOpts.onAiEvent?.(event);
   }
 }

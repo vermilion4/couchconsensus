@@ -46,6 +46,18 @@ For live reload instead: `pnpm dev` (server on :8080 with the phone page on Vite
 
 The QR code points at your Mac's LAN address, so phones must be on the same Wi-Fi.
 
+### With Amazon Bedrock (AI moods and verdict line)
+
+```bash
+AWS_PROFILE=couch AI_MODE=on pnpm start
+```
+
+- **AI-1:** while the room is in the lobby, Claude Haiku 4.5 turns the moods into a 15-title shortlist from the rule-filtered catalog.
+- **AI-2:** when a round ends, it writes the one-sentence verdict reason while the TV shows "The referee is thinking…".
+- **Fallback (AI-3):** each call has a time budget (3 s for the deck, 2.5 s for the reason). A late, failed or off-spec answer falls back to the rule-based deck and template reason, so the game never waits on Bedrock.
+- **Logs:** every outcome is logged as `ai deck: ai|fallback` or `ai reason: ai|fallback`, with latency and the reason for any fallback.
+- **Privacy:** only aggregates go to the model. Nicknames are scrubbed from mood text, and individual votes are never sent.
+
 ### TV app on the Vega Virtual Device
 
 ```bash
@@ -68,7 +80,7 @@ AWS_PROFILE=couch pnpm deploy            # prints PublicUrl (CloudFront)
 AWS_PROFILE=couch pnpm destroy           # tear everything down
 ```
 
-Configuration (env vars on the service): `AI_MODE` (`off` default), `BEDROCK_MODEL_ID`, `CATALOG_MODE` (`demo` default), `PUBLIC_BASE_URL`, `DEFAULT_REGION`.
+Configuration (env vars on the service): `AI_MODE` (`off` default), `BEDROCK_MODEL_ID` (default `us.anthropic.claude-haiku-4-5-20251001-v1:0`), `AWS_REGION` (default `us-east-1`), `CATALOG_MODE` (`demo` default), `PUBLIC_BASE_URL`, `DEFAULT_REGION`.
 
 ## Licence
 

@@ -51,3 +51,15 @@ export function buildDeck(req: DeckRequest): TitleId[] {
     .slice(0, req.size)
     .map(({t}) => t.id);
 }
+
+/**
+ * Everything an AI-1 shortlist depends on. A prepared deck is used only while this key is unchanged,
+ * so a mood edited after the shortlist was built never deals a stale deck. Voter order is dropped.
+ */
+export function deckInputsKey(room: {rules: GroundRules; region: string; moods: {chips: MoodChip[]; text?: string; skipped: boolean}[]}): string {
+  const moods = room.moods
+    .filter(m => !m.skipped && (m.chips.length > 0 || m.text))
+    .map(m => JSON.stringify([[...m.chips].sort(), m.text ?? '']))
+    .sort();
+  return JSON.stringify({rules: room.rules, region: room.region, moods});
+}

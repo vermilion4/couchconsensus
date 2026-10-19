@@ -15,6 +15,9 @@ export interface Config {
   /** Demo poster art (packages/catalog/art), served at /art/. */
   artDir: string;
   aiMode: 'off' | 'on';
+  /** Bedrock model or cross-region inference profile (ADR-0008). Swap for Nova or Sonnet by config. */
+  bedrockModelId: string;
+  awsRegion: string;
   catalogMode: 'demo' | 'real';
   defaultRegion: string;
   logLevel: string;
@@ -29,6 +32,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     phoneDistDir: env.PHONE_DIST_DIR ?? fileURLToPath(new URL('../../phone/dist', import.meta.url)),
     artDir: env.ART_DIR ?? fileURLToPath(new URL('../../../packages/catalog/art', import.meta.url)),
     aiMode: env.AI_MODE === 'on' ? 'on' : 'off',
+    bedrockModelId: env.BEDROCK_MODEL_ID ?? 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+    awsRegion: env.AWS_REGION ?? 'us-east-1',
     catalogMode: env.CATALOG_MODE === 'real' ? 'real' : 'demo',
     defaultRegion: env.DEFAULT_REGION ?? 'US',
     logLevel: env.LOG_LEVEL ?? 'info',
