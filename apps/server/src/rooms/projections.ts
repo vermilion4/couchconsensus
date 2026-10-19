@@ -135,6 +135,7 @@ export function projectVoter(room: Room, voterId: string, ctx: Ctx): VoterView {
     me: {
       id: voter.id,
       nickname: voter.nickname,
+      colorIndex: Math.max(0, seatedVoters(room).findIndex(x => x.id === voterId)),
       ...(mood ? {mood: {chips: mood.chips, ...(mood.text ? {text: mood.text} : {}), skipped: mood.skipped}} : {}),
       ...(live
         ? {
@@ -157,6 +158,7 @@ export function projectVoter(room: Room, voterId: string, ctx: Ctx): VoterView {
             deck: round.deck.map(c => titleCard(ctx.catalog, room.region, c.titleId)),
             allowVeto: round.allowVeto,
             allowSuperYes: round.allowSuperYes,
+            progress: seatedVoters(room).map((x, colorIndex) => ({colorIndex, finished: round.ballots[x.id]?.finishedAt !== undefined})),
           },
         }
       : {}),

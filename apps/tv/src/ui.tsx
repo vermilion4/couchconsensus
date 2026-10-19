@@ -1,102 +1,189 @@
-// Shared TV pieces (Figma: Foundations). 10-foot type: body ≥ 28 px at 1080p (ARCHITECTURE §8).
+// Shared TV pieces, built to the Figma frames (page "Screens", 1920×1080). Positions are Figma
+// coordinates; text line heights match Figma's (Auto ≈ 1.2 × size, Display XL 95 %), so a block at
+// top: y in code sits where the frame puts it.
 import React, {useState} from 'react';
-import {Dimensions, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle} from 'react-native';
-import {color, voterColor} from '@couch/theme';
-import {MAX_VOTERS} from '@couch/protocol';
+import {
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
+import {color} from '@couch/theme';
+import {withFont} from './type';
 
 /**
  * Screens are designed at 1920×1080 (Figma). Vega lays out in density-independent units (960×540 on a
  * 1080p TV), so every size goes through k. Unitless values (flex, opacity, zIndex, transforms) stay as is.
  */
 export const k = Dimensions.get('window').width / 1920;
-const UNITLESS = new Set(['flex', 'flexGrow', 'flexShrink', 'opacity', 'zIndex', 'aspectRatio', 'transform', 'elevation']);
+const UNITLESS = new Set([
+  'flex',
+  'flexGrow',
+  'flexShrink',
+  'opacity',
+  'zIndex',
+  'aspectRatio',
+  'transform',
+  'elevation',
+]);
 const scaleStyle = (o: Record<string, unknown>) =>
-  Object.fromEntries(Object.entries(o).map(([key, v]) => [key, typeof v === 'number' && !UNITLESS.has(key) ? v * k : v]));
-/** StyleSheet.create with 1920-based sizes. */
+  Object.fromEntries(
+    Object.entries(o).map(([key, v]) => [
+      key,
+      typeof v === 'number' && !UNITLESS.has(key) ? v * k : v,
+    ]),
+  );
+/** StyleSheet.create with 1920-based sizes and the brand fonts (type.ts). */
 export function sheet<T extends StyleSheet.NamedStyles<T>>(styles: T): T {
   const out: Record<string, unknown> = {};
-  for (const [name, style] of Object.entries(styles)) out[name] = scaleStyle(style as Record<string, unknown>);
+  for (const [name, style] of Object.entries(styles))
+    out[name] = withFont(scaleStyle(style as Record<string, unknown>));
   return StyleSheet.create(out as T);
 }
+/** One-off Figma position: {left, top} scaled. */
+export const at = (left: number, top: number) => ({
+  position: 'absolute' as const,
+  left: left * k,
+  top: top * k,
+});
 
+/** Brand / Lockup (horizontal): the mark and the wordmark, top left of every screen but Home. */
 export const Header = () => (
-  <View style={s.header}>
+  <>
     <Image source={require('../assets/image/mark.png')} style={s.mark} />
     <Text style={s.wordmark}>CouchConsensus</Text>
-  </View>
+  </>
 );
 
 type ButtonProps = {
   label: string;
   onPress: () => void;
   primary?: boolean;
-  /** Toggle chips: on = orange with a check, like the rules editor. */
-  selected?: boolean;
   disabled?: boolean;
   preferred?: boolean;
-  small?: boolean;
+  /** The surface behind the button: the focus ring is drawn in it when unfocused, so nothing shifts. */
+  on?: string;
   style?: StyleProp<ViewStyle>;
+  /** False while a panel covers the button, so the remote cannot reach it. */
+  focusable?: boolean;
 };
 
-/** Focus = Fire TV orange + Glow ring and a small lift; text on orange is always Night (5.3:1). */
-export function Button({label, onPress, primary, selected, disabled, preferred, small, style}: ButtonProps) {
+/**
+ * Button (Figma: "Button / primary / focused"): 108 tall, Figtree Bold 40, radius 20. Primary is Fire
+ * TV orange with Night text (5.3:1); secondary is Couch. Focus adds a 6 px Glow ring outside the button.
+ */
+export function Button({
+  label,
+  onPress,
+  primary,
+  disabled,
+  preferred,
+  on = color.night,
+  style,
+  focusable = true,
+}: ButtonProps) {
   const [focused, setFocused] = useState(false);
-  const orange = focused || primary || selected;
   return (
     <Pressable
       hasTVPreferredFocus={preferred}
       disabled={disabled}
+      focusable={focusable}
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       accessibilityRole="button"
-      accessibilityState={{disabled, selected}}
+      accessibilityState={{disabled}}
       accessibilityLabel={label}
       style={[
-        small ? s.chipButton : s.button,
-        orange && s.orange,
-        focused && s.focused,
+        s.ring,
+        {borderColor: focused ? color.glow : on},
         disabled && s.disabled,
         style,
       ]}>
-      <Text style={[small ? s.chipText : s.buttonText, orange && s.onOrange]}>
-        {selected ? `✓ ${label}` : label}
-      </Text>
+      <View style={[s.button, (primary || focused) && s.orange]}>
+        <Text style={[s.buttonText, (primary || focused) && s.onOrange]}>
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 }
 
-export const Chip = ({label}: {label: string}) => (
-  <View style={s.chip}>
+/** Chip / option (rules editor): Cushion, orange with a check when selected, Glow ring when focused. */
+export function Option(p: {
+  label: string;
+  selected?: boolean;
+  preferred?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <Pressable
+      hasTVPreferredFocus={p.preferred}
+      disabled={p.disabled}
+      onPress={p.onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      accessibilityRole="button"
+      accessibilityState={{selected: p.selected, disabled: p.disabled}}
+      accessibilityLabel={p.label}
+      style={[
+        s.optionRing,
+        {borderColor: focused ? color.glow : color.couch},
+        p.disabled && s.disabled,
+      ]}>
+      <View style={[s.option, (p.selected || focused) && s.orange]}>
+        <Text style={[s.optionText, (p.selected || focused) && s.onOrange]}>
+          {p.selected ? `✓ ${p.label}` : p.label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+/** Chip / rule: a fact, not a control. Couch, or Cushion to stand out ("Watch on …"). */
+export const Chip = ({label, raised}: {label: string; raised?: boolean}) => (
+  <View style={[s.chip, raised && {backgroundColor: color.cushion}]}>
     <Text style={s.chipText}>{label}</Text>
   </View>
 );
 
-/** The row of people along the bottom edge: one head per voter in their colour, plus open seats. */
-export function Heads({names, openSeat = true}: {names: string[]; openSeat?: boolean}) {
-  const open = openSeat && names.length < MAX_VOTERS ? 1 : 0;
-  const shown = names.slice(-4); // the newest four fit; the scoreboard lists everyone
-  const offset = names.length - shown.length;
+export type Seat = {label: string; fill: string; open?: boolean};
+
+/** People along the bottom edge (Figma: "audience" / "seat"): 220 heads at y 830, shoulders from y 1010. */
+export function Heads({seats, xs}: {seats: Seat[]; xs: number[]}) {
   return (
-    <View style={s.heads} pointerEvents="none">
-      {shown.map((n, i) => (
-        <Person key={`${n}-${i}`} label={n} fill={voterColor(offset + i)} />
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {seats.map((p, i) => (
+        <React.Fragment key={`${p.label}-${i}`}>
+          <View
+            style={[
+              s.shoulders,
+              at(xs[i]! - 60, 1010),
+              {backgroundColor: p.fill},
+            ]}
+          />
+          <View style={[s.head, at(xs[i]!, 830), {backgroundColor: p.fill}]}>
+            {p.label ? (
+              <Text numberOfLines={1} style={p.open ? s.plus : s.headText}>
+                {p.label}
+              </Text>
+            ) : null}
+          </View>
+        </React.Fragment>
       ))}
-      {open ? <Person label="+" fill={color.cushion} muted /> : null}
     </View>
   );
 }
 
-const Person = ({label, fill, muted}: {label: string; fill: string; muted?: boolean}) => (
-  <View style={s.person}>
-    <View style={[s.head, {backgroundColor: fill}]}>
-      <Text numberOfLines={1} style={[s.headText, muted && {color: color.mist}]}>
-        {label}
-      </Text>
-    </View>
-    <View style={[s.shoulders, {backgroundColor: fill}]} />
-  </View>
-);
+/** Head x positions for n seats, 260 apart, ending with the last head at x = last. */
+export const seatXs = (n: number, last: number) =>
+  Array.from({length: n}, (_, i) => last - 260 * (n - 1 - i));
 
 export const Toast = ({text}: {text?: string}) =>
   text ? (
@@ -105,50 +192,123 @@ export const Toast = ({text}: {text?: string}) =>
     </View>
   ) : null;
 
+/** Figma text styles (TV/…). */
 export const t = sheet({
-  screen: {flex: 1, backgroundColor: color.night, paddingHorizontal: 96, paddingTop: 72, paddingBottom: 56},
-  display: {color: color.glow, fontSize: 132, fontWeight: '800', lineHeight: 140, letterSpacing: -2},
-  h1: {color: color.glow, fontSize: 88, fontWeight: '800', lineHeight: 96},
-  h2: {color: color.glow, fontSize: 48, fontWeight: '800'},
-  eyebrow: {color: color.ember, fontSize: 30, fontWeight: '700'},
-  body: {color: color.glow, fontSize: 32, lineHeight: 44},
-  muted: {color: color.mist, fontSize: 28, lineHeight: 40},
-  label: {color: color.mist, fontSize: 26, marginBottom: 14},
-  row: {flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 20},
+  screen: {flex: 1, backgroundColor: color.night, overflow: 'hidden'},
+  displayXL: {
+    color: color.glow,
+    fontSize: 160,
+    fontWeight: '800',
+    lineHeight: 152,
+    letterSpacing: -3.2,
+  },
+  display: {
+    color: color.glow,
+    fontSize: 96,
+    fontWeight: '800',
+    lineHeight: 115,
+  },
+  title: {
+    color: color.glow,
+    fontSize: 56,
+    fontFamily: 'display',
+    fontWeight: '700',
+    lineHeight: 67,
+  },
+  eyebrow: {
+    color: color.ember,
+    fontSize: 34,
+    fontWeight: '700',
+    lineHeight: 41,
+  },
+  lede: {color: color.mist, fontSize: 34, fontWeight: '500', lineHeight: 47.6},
+  large: {color: color.glow, fontSize: 40, fontWeight: '500', lineHeight: 48},
+  label: {color: color.mist, fontSize: 28, fontWeight: '600', lineHeight: 34},
+  hint: {color: color.mist, fontSize: 30, fontWeight: '500', lineHeight: 36},
+  row: {flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 16},
 });
 
 const s = sheet({
-  header: {flexDirection: 'row', alignItems: 'center', gap: 18, marginBottom: 36},
-  mark: {width: 64, height: 64},
-  wordmark: {color: color.glow, fontSize: 36, fontWeight: '800'},
-  button: {
-    paddingVertical: 24,
-    paddingHorizontal: 48,
-    borderRadius: 18,
-    backgroundColor: color.couch,
-    borderWidth: 5,
-    borderColor: 'transparent',
+  mark: {position: 'absolute', left: 118, top: 76, width: 74, height: 74},
+  wordmark: {
+    position: 'absolute',
+    left: 218,
+    top: 82,
+    color: color.glow,
+    fontSize: 42,
+    fontWeight: '800',
+    lineHeight: 50,
   },
-  chipButton: {
-    paddingVertical: 14,
+  ring: {borderWidth: 6, borderRadius: 26, alignSelf: 'flex-start'},
+  button: {
+    paddingVertical: 30,
+    paddingHorizontal: 56,
+    borderRadius: 20,
+    backgroundColor: color.couch,
+  },
+  buttonText: {
+    color: color.glow,
+    fontSize: 40,
+    fontWeight: '700',
+    lineHeight: 48,
+  },
+  optionRing: {borderWidth: 6, borderRadius: 22},
+  option: {
+    paddingVertical: 18,
     paddingHorizontal: 28,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: color.cushion,
-    borderWidth: 4,
-    borderColor: 'transparent',
+  },
+  optionText: {
+    color: color.glow,
+    fontSize: 30,
+    fontWeight: '700',
+    lineHeight: 36,
   },
   orange: {backgroundColor: color.fireOrange},
-  focused: {borderColor: color.glow, transform: [{scale: 1.05}]},
-  disabled: {opacity: 0.4},
-  buttonText: {color: color.glow, fontSize: 36, fontWeight: '700'},
-  chipText: {color: color.glow, fontSize: 28, fontWeight: '600'},
   onOrange: {color: color.night},
-  chip: {paddingVertical: 14, paddingHorizontal: 28, borderRadius: 14, backgroundColor: color.cushion},
-  heads: {position: 'absolute', right: 0, bottom: 0, flexDirection: 'row', alignItems: 'flex-end'},
-  person: {width: 260, alignItems: 'center', marginLeft: -50},
-  head: {width: 220, height: 220, borderRadius: 110, alignItems: 'center', justifyContent: 'center', zIndex: 1, paddingHorizontal: 16},
-  headText: {color: color.night, fontSize: 44, fontWeight: '800'},
-  shoulders: {width: 320, height: 110, marginTop: -40, borderTopLeftRadius: 160, borderTopRightRadius: 160},
-  toast: {position: 'absolute', left: 96, bottom: 40, paddingVertical: 18, paddingHorizontal: 28, borderRadius: 16, backgroundColor: color.cushion},
-  toastText: {color: color.error, fontSize: 28, fontWeight: '600'},
+  disabled: {opacity: 0.4},
+  chip: {
+    paddingVertical: 18,
+    paddingHorizontal: 28,
+    borderRadius: 16,
+    backgroundColor: color.couch,
+  },
+  chipText: {
+    color: color.glow,
+    fontSize: 30,
+    fontWeight: '600',
+    lineHeight: 36,
+  },
+  head: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  headText: {
+    color: color.night,
+    fontSize: 48,
+    fontWeight: '800',
+    lineHeight: 58,
+  },
+  plus: {color: color.mist, fontSize: 72, fontWeight: '800', lineHeight: 86},
+  shoulders: {width: 340, height: 220, borderRadius: 150},
+  toast: {
+    position: 'absolute',
+    left: 120,
+    bottom: 40,
+    paddingVertical: 18,
+    paddingHorizontal: 28,
+    borderRadius: 16,
+    backgroundColor: color.cushion,
+  },
+  toastText: {
+    color: color.error,
+    fontSize: 28,
+    fontWeight: '600',
+    lineHeight: 34,
+  },
 });

@@ -1,33 +1,148 @@
 # Friction Log: CouchConsensus
 
-Kept daily from Oct 10, 2026. Worth up to a 10% judging bonus. One row per friction point, newest at the bottom. Add a row the moment something gets in the way, while the details are fresh.
+Kept daily from Oct 10, 2026. Every snag gets a row while it's fresh.
 
-**Severity:** 🔴 Blocker (stopped work) · 🟠 Major (workaround cost > 1 h or changed the design) · 🟡 Minor (annoying, < 1 h) · ⚪ Note (docs gap, no time lost)
+**Severity:** 🔴 Blocker (stopped work) · 🟠 Major (needed a real workaround, or changed the design) · 🟡 Minor (small workaround) · ⚪ Note (docs gap)
 
-## Log
+## At a glance
 
-| # | Date | Tool / service | Task attempted | Steps taken | Expected | Actual | Severity | Time lost | Workaround | Suggestion |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 2026-10-10 | Vega SDK 0.24 docs (React Native for Vega) | Confirm the TV app can hold a live WebSocket to the session service | 1. Searched the Vega RN overview and release notes for "WebSocket"<br>2. Read the 0.24 Supported Libraries page | A clear statement that the RN `WebSocket` global works on Vega and the Virtual Device | Docs only say pure-JS packages like fetch and WebSocket "will likely work"; nothing for the Virtual Device | ⚪ Note | ~20 min | HTTPS polling fallback using the same handlers (ADR-0004); spike S1 on the VVD on day 1 | List core networking APIs (WebSocket, fetch streaming, EventSource) with explicit supported / not-supported status per device type, including the Virtual Device |
-| 2 | 2026-10-10 | Prime Video / Amazon developer APIs | Pick a title catalog with "where to watch" data, ideally Prime Video | 1. Searched for a Prime Video catalog or availability API for third-party developers | A read-only catalog/availability API for Fire TV app developers | Only partner-facing APIs exist (e.g. the Avails API for content owners); no read access to the catalog | ⚪ Note | ~15 min | TMDB + JustWatch watch-provider snapshot (ADR-0009) | Offer Fire TV developers a read-only catalog + deep-link API (rate-limited, non-commercial is fine) so group-watching apps can recommend titles on Amazon's own platform |
-| 3 | 2026-10-10 | Amazon Bedrock (Claude Haiku 4.5, us-east-1) | Spike S3: measure Haiku 4.5 latency and schema validity for AI-1 / AI-2 | 1. Confirmed `us.anthropic.claude-haiku-4-5-20251001-v1:0` is ACTIVE via `aws bedrock list-inference-profiles`<br>2. Called it with `@anthropic-ai/bedrock-sdk` 0.34.4 (34 requests) | Model listed as ACTIVE means it is invocable | Every call returned `404 Model use case details have not been submitted for this account`. `list-foundation-models` / `list-inference-profiles` still say ACTIVE; only `get-foundation-model-availability` reveals it (`agreementAvailability: NOT_AVAILABLE`) | 🟡 Minor | ~10 min + up to 15 min wait after the form | Account owner submits the Anthropic use-case form in the Bedrock console, then rerun the spike | Show agreement status next to ACTIVE in the `list-*` outputs, and return 403 with a console deep link instead of 404 |
-| 4 | 2026-10-10 | Amazon Bedrock console (new personal AWS account) | Submit the Anthropic use case form to enable Claude Haiku 4.5 | 1. Created a new personal account, IAM admin user and budget<br>2. Bedrock → Model catalog → Claude Haiku 4.5 → Submit use case details (all fields filled) | Form accepted; model invocable within 15 min | `Your account is not authorized to perform this action. Please create a support case`; no reason given and no self-service path | 🟠 Major | Pending support reply (hours to days) | Opened an Account and billing support case; core tier runs with `AI_MODE=off`; Amazon Nova Lite is the fallback if not approved by Oct 17 | Tell new accounts up front (in the model catalog, before the form) that Anthropic access needs account review, give an expected timeline, and offer a one-click review request instead of a manual support case |
-| 5 | 2026-10-10 | Vega CLI 1.4.4 (`vega project generate`) | Generate a test app into `spikes/tvspike` | 1. `vega project generate --template helloWorld --name tvspike --outputDir spikes` | A `spikes/tvspike/` folder (like `create-react-app` / `npx react-native init`) | Template files were written straight into `spikes/`, mixed with existing folders; the success message gives no path | 🟡 Minor | ~5 min | Moved the files into a new folder by hand | Create `<outputDir>/<name>/` by default (or add `--in-place`), and print the created path |
-| 6 | 2026-10-10 | Vega CLI (`vega project install`) + Supported Libraries page | Add a QR code library to the TV app | 1. Supported Libraries page lists `react-native-qrcode-svg` ~3.0.0<br>2. `vega project install @amazon-devices/react-native-qrcode-svg` | The CLI installs the documented, supported version | `not in OS version 1.2 profile, skipping`, although `@amazon-devices/react-native-qrcode-svg@3.0.0` is on npm and works | 🟡 Minor | ~10 min | Installed it with plain `npm install @amazon-devices/react-native-qrcode-svg@3.0.0`; renders fine on the VVD | Keep the compatibility profile in sync with the Supported Libraries page, or say why a listed library is excluded |
-| 7 | 2026-10-10 | `@amazon-devices/react-native-w3cmedia` 2.3.2 docs | Create an `AudioPlayer` for a short sound effect | 1. Copied the constructor example from the AudioPlayer class page | Example compiles | Docs use `AudioContentType.MUSIC` / `AudioUsageType.MEDIA`; the package exports `CONTENT_TYPE_MUSIC` / `USAGE_MEDIA` (TypeScript error) | ⚪ Note | ~5 min | Read the enum in `MediaTypes.d.ts` | Generate doc samples from the typed package so they compile |
-| 8 | 2026-10-10 | `react-native-w3cmedia` AudioPlayer on the Vega Virtual Device | Spike S5: play a 0.7 s whistle on the verdict screen | 1. `player.src = 'http://<mac>:8787/whistle.{mp3,m4a,wav}'` → `play()`<br>2. Same files fetched in JS and fed through `MediaSource` + `SourceBuffer` | A short MP3 plays from a URL, like `<audio src>` on the web | URL playback fails with `MEDIA_ERR_SRC_NOT_SUPPORTED` (code 4) for every format, and the player never requests the file; MP3 through MSE fails with decode error (code 3); only **AAC (.m4a) through MSE** plays. `canPlayType('audio/mpeg')` still says `probably` | 🟠 Major | ~45 min | Bundle/serve the effect as AAC `.m4a`, fetch it in JS, play through MSE (helper in the TV app) | Support plain progressive URLs for short audio (or document that only MSE is supported and why), make `canPlayType` honest, and ship a "play a sound effect" sample |
-| 9 | 2026-10-10 | Vega Virtual Device + `vega device run-cmd` | Take a screenshot of the VVD to verify the QR code without a human | 1. `vega device run-cmd --command 'screenshooter /tmp/s1.png'`<br>2. `gwsi-tool-screenshooter /tmp/vvd1.png` | A PNG of the TV screen | (1) `creating a buffer file … failed: Permission denied`, after which the dev shell service crashed (`No running instances of com.amazon.dev.shell.service`) until it restarted ~5 s later; (2) hung for 2 min | 🟡 Minor | ~20 min | Made the test app report its results over the WebSocket instead; a human checks the QR visually | Add `vega device screenshot` (the VVD's QEMU display is right there), and stop the shell service crashing on a tool error |
-| 10 | 2026-10-10 | Vega build (Metro) in a pnpm workspace | Spike S4: TV app imports a shared `@couch/protocol` package (Zod) | 1. pnpm workspace with `workspace:*` dependency<br>2. `pnpm run build:debug` | Builds like any RN app in a monorepo | `Unable to resolve module react-native` with pnpm's default isolated layout; then Zod 4 failed Babel (`export * as` needs `plugin-transform-export-namespace-from`) | 🟡 Minor | ~15 min | `.npmrc` `node-linker=hoisted`, Metro `watchFolders` + `nodeModulesPaths` for the workspace root, add the Babel plugin. Zod then validates correctly on Hermes | Ship a monorepo note or template (pnpm/yarn workspaces) and include `export-namespace-from` in the Vega Babel preset |
-| 11 | 2026-10-10 | `inputd-cli` on the Vega Virtual Device | Press OK on the virtual remote from a script | 1. `inputd-cli button_press dpad_center` / `help` | Either works, or the error lists valid names | `invalid button value` with no list; the valid name is `KEY_ENTER` (Linux input codes), found in the online docs | ⚪ Note | ~5 min | Used `KEY_ENTER`, `KEY_RIGHT` | Print the accepted key names on an invalid value |
-| 12 | 2026-10-10 | Amazon Bedrock (new personal account, us-east-1) | Re-test Bedrock after adding a payment method | 1. Added a card; waited ~2.5 h<br>2. `get-foundation-model-availability` for Nova Lite and Claude Haiku 4.5<br>3. One minimal `bedrock-runtime converse` call to Nova Lite | Bedrock usable once the account has a payment method, at least for Amazon's own models | `authorizationStatus: NOT_AUTHORIZED` for every model; `converse` returns `ValidationException: Operation not allowed`. The console offers no self-service fix; the support form has a dedicated "Bedrock Allowlisting" category | 🔴 Blocker (for AI-1/AI-2) | Hours, pending support | Support case (Account and billing → Account Activation → Bedrock Allowlisting); core tier ships with `AI_MODE=off`; Nova Lite fallback | Tell new accounts in the Bedrock console that model access requires allowlisting, show the status, and link the request form; a 400 "Operation not allowed" gives no hint of the cause |
-| 13 | 2026-10-10 | AWS CloudFront + ECS Fargate via CDK (new personal account) | Spike S6: deploy the stack with CloudFront in front of the ALB for HTTPS/WSS | 1. `cdk bootstrap`<br>2. `cdk deploy` (DynamoDB, ECS Fargate + ALB, CloudFront) | Stack deploys | CloudFront creation fails: `Your account must be verified before you can add new CloudFront resources … contact AWS Support`; CloudFormation rolled back the whole stack after ~5 min | 🟠 Major | ~20 min | Made CloudFront optional (`-c cdn=false`) and redeployed: ECS then reported `unable to place a task because your account is currently blocked` and the stack hung in CREATE_IN_PROGRESS until deleted by hand. All three (Bedrock, CloudFront, Fargate) wait on account verification via the support case | Surface account-verification gates (CloudFront, Bedrock) on the console home page of new accounts, with one request covering all of them |
-| 14 | 2026-10-10 | `@amazon-devices/react-native-async-storage__async-storage` | Persist the TV's host token so a relaunch can offer Resume room (US-12) | 1. `pnpm add` the `-rn-83` build<br>2. `vega project install … --dry-run`<br>3. `vega device installed-packages` | A key-value store in the OS 1.2 + RN 0.83 profile | The `-rn-83` version is missing from the package's own `kepler-compatibility.json` (build prints ERROR), `vega project install` says it is not in the profile, and the device has no async-storage package | 🟠 Major | ~45 min | The TV lazily `require`s it and falls back to memory, so it never crashes; Resume only survives a remount until a profiled store exists | List the supported persistence options per OS profile next to the Supported Libraries page |
-| 15 | 2026-10-10 | React Native for Vega layout units | Build TV screens from the 1920×1080 Figma frames | 1. Used Figma pixel values in `StyleSheet`<br>2. Ran on the Virtual Device | 1080p TV means 1920×1080 layout units | Layout is in density-independent units (960×540 on a 1080p screen), so everything rendered at 2× and overflowed | 🟡 Minor | ~15 min | A `sheet()` helper scales every size by `screenWidth / 1920` | Say the window size in dp in the TV design guidelines, next to the 1920×1080 safe-area guidance |
-| 16 | 2026-10-10 | Vega Virtual Device logs | See `console.warn` output from the TV app while debugging a frozen screen | 1. `vega device start-log-stream`<br>2. Grepped for the app, ReactNativeJS and the warning text | JS console output in the device log stream | Only native logs (Volta, KeplerScript-Native) appear; JS console output does not, so a silently dropped WebSocket view had no trace | 🟠 Major | ~1.5 h | Drop counters on the client (stale / unreadable / invalid / resyncs), shown on screen during the investigation; plus a resync when an ack's rev is ahead of the last view | Document where JS console output goes in Debug builds without Metro attached |
-| 17 | 2026-10-19 | React Native `WebSocket` on the Vega Virtual Device | Push room views (0.5–3 KB JSON text frames) from the session service to the TV | 1. Played rounds with bots and called them early from the TV<br>2. Counted views the TV dropped, and recorded `JSON.parse` errors on screen<br>3. Measured frame sizes from Node | Every text frame delivered intact, as in Node and mobile browsers | Some frames reach JS garbled (`JSON Parse error: Unexpected character: T`, text starting mid-message). It happens reliably for a 3.1 KB frame and intermittently for ~1.5 KB frames sent right after another frame; frames of about 1 KB were fine. That fits frames split across TCP segments, or several frames in one read. The screen froze on a stale view, and the problem hid whenever extra logging changed the timing | 🔴 Blocker | ~4 h | Clients re-fetch the current view over HTTP (`GET /api/rooms/:code/view`) when a message is unreadable or an ack's `rev` is ahead of the view, and reconnect if that fails too. `rev` now also bumps on timer-driven changes | Fix frame reassembly in the Vega WebSocket; until then, document the issue and recommend an HTTP resync path |
+| # | Date | Tool | What went wrong | Severity |
+| --- | --- | --- | --- | --- |
+| 1 | Oct 10 | Vega docs | No clear answer on whether WebSocket works | ⚪ Note |
+| 2 | Oct 10 | Amazon APIs | No public catalog or "where to watch" API | ⚪ Note |
+| 3 | Oct 10 | Amazon Bedrock | Misleading 404 when the model form wasn't sent | 🟡 Minor |
+| 4 | Oct 10 | Bedrock console | Model form refused on a new account, no reason given | 🟠 Major |
+| 5 | Oct 10 | Vega CLI | `project generate` scattered files, printed no path | 🟡 Minor |
+| 6 | Oct 10 | Vega CLI | Working QR library refused as "not in profile" | 🟡 Minor |
+| 7 | Oct 10 | w3cmedia docs | Sample code uses enum names that don't exist | ⚪ Note |
+| 8 | Oct 10 | w3cmedia | Sound files won't play from a URL | 🟠 Major |
+| 9 | Oct 10 | Virtual Device | Screenshot tool fails, then crashes the dev shell | 🟡 Minor |
+| 10 | Oct 10 | Vega build | Metro breaks in a pnpm monorepo; Zod 4 fails Babel | 🟡 Minor |
+| 11 | Oct 10 | `inputd-cli` | Bad key name rejected without listing valid ones | ⚪ Note |
+| 12 | Oct 10 | Amazon Bedrock | Every model blocked on the new account | 🔴 Blocker |
+| 13 | Oct 10 | CloudFront, ECS | Deploys refused until the account is verified | 🟠 Major |
+| 14 | Oct 10 | async-storage | Storage library missing from the OS profile | 🟠 Major |
+| 15 | Oct 10 | React Native for Vega | Layout units are half the screen pixels; screens rendered 2× | 🟡 Minor |
+| 16 | Oct 10 | Virtual Device logs | JS log tag isn't documented | ⚪ Note |
+| 17 | Oct 19 | Vega WebSocket | Some messages arrive garbled; the TV froze | 🔴 Blocker |
 
-## Blank row to copy
+## Details
 
-```
-| N | YYYY-MM-DD | | | 1. …<br>2. … | | | 🟡 Minor | | | |
-```
+### 1. Does WebSocket work on Vega? · ⚪ Note
+- **Tried:** confirm the TV app can hold a live connection to our server.
+- **Steps:** searched the Vega React Native docs and the Supported Libraries page.
+- **Expected:** a clear yes or no. **Got:** "pure-JS packages like fetch and WebSocket will likely work".
+- **Workaround:** tested it ourselves on day one; it works.
+- **Suggestion:** list core networking APIs with a supported / not supported status.
+
+### 2. No catalog API for Fire TV developers · ⚪ Note
+- **Tried:** find a movie catalog with "where to watch", ideally Prime Video.
+- **Steps:** searched Amazon developer APIs.
+- **Expected:** a read-only catalog API. **Got:** partner-only APIs for content owners.
+- **Workaround:** TMDB plus watch-provider data (planned), and an invented demo deck for now.
+- **Suggestion:** a rate-limited, read-only catalog and deep-link API for TV apps.
+
+### 3. Bedrock says 404 when it means "form missing" · 🟡 Minor
+- **Tried:** time Claude Haiku 4.5 calls.
+- **Steps:** called the model; the model list showed it as ACTIVE.
+- **Expected:** a response, or a clear access error. **Got:** `404 Model use case details have not been submitted`.
+- **Workaround:** submitted the Anthropic use-case form in the console.
+- **Suggestion:** return 403 with a console link, and show the form status next to ACTIVE.
+
+### 4. Model form refused on a new account · 🟠 Major
+- **Tried:** submit the Anthropic use-case form on a new personal account.
+- **Steps:** filled in the form in the Bedrock console and submitted it.
+- **Expected:** access within minutes. **Got:** "Your account is not authorized… create a support case."
+- **Workaround:** opened a support case; the game runs without AI until access arrives.
+- **Suggestion:** tell new accounts up front that access needs a review, and how long it takes.
+
+### 5. `vega project generate` scattered files · 🟡 Minor
+- **Tried:** generate a test app into `spikes/tvspike`.
+- **Steps:** ran `vega project generate` with that folder.
+- **Expected:** a new app folder. **Got:** template files mixed into the existing folder, with no path printed.
+- **Workaround:** moved the files by hand.
+- **Suggestion:** create `<dir>/<name>/` by default and print the path.
+
+### 6. Working library refused as "not in profile" · 🟡 Minor
+- **Tried:** add a QR code library to the TV app.
+- **Steps:** `vega project install @amazon-devices/react-native-qrcode-svg`.
+- **Expected:** installed. **Got:** "not in OS version 1.2 profile, skipping", though it's published and works.
+- **Workaround:** plain `npm install`; it renders fine.
+- **Suggestion:** keep the profile in sync with the Supported Libraries page.
+
+### 7. w3cmedia samples don't compile · ⚪ Note
+- **Tried:** create an `AudioPlayer` for a short sound.
+- **Steps:** copied the doc sample.
+- **Expected:** it compiles. **Got:** TypeScript errors; the docs use `MUSIC` and `MEDIA`, the package exports `CONTENT_TYPE_MUSIC` and `USAGE_MEDIA`.
+- **Workaround:** read the enum in the package's type definitions.
+- **Suggestion:** generate doc samples from the typed package.
+
+### 8. Sound files won't play from a URL · 🟠 Major
+- **Tried:** play a whistle on the verdict screen.
+- **Steps:** tried MP3, M4A and WAV by URL, then through MediaSource.
+- **Expected:** a URL plays. **Got:** every URL failed with code 4, and the player never requested the file; MP3 through MediaSource failed to decode.
+- **Workaround:** AAC `.m4a`, fetched in JS and fed through MediaSource. This works reliably.
+- **Suggestion:** support plain URLs for short sounds, or document that only MediaSource works.
+
+### 9. No way to screenshot the Virtual Device · 🟡 Minor
+- **Tried:** screenshot the TV to check screens without a human.
+- **Steps:** ran `screenshooter` and `gwsi-tool-screenshooter` with `vega device run-cmd`.
+- **Expected:** a PNG. **Got:** a permission error, then the dev shell service crashed until restart.
+- **Workaround:** captured the device's macOS window instead.
+- **Suggestion:** add `vega device screenshot`.
+
+### 10. Monorepo build breaks · 🟡 Minor
+- **Tried:** share a TypeScript package between the TV, phone and server.
+- **Steps:** built the TV app in a pnpm workspace.
+- **Expected:** it builds. **Got:** `Unable to resolve module react-native`, then Zod 4 failed in Babel.
+- **Workaround:** hoisted pnpm layout, Metro watch folders, and an extra Babel plugin.
+- **Suggestion:** publish a monorepo template and add the plugin to the Vega Babel preset.
+
+### 11. `inputd-cli` hides valid key names · ⚪ Note
+- **Tried:** press OK on the virtual remote from a script.
+- **Steps:** `inputd-cli button_press OK`.
+- **Expected:** a press, or a list of valid keys. **Got:** "invalid button value".
+- **Workaround:** found `KEY_ENTER` in the online docs.
+- **Suggestion:** print the accepted names on an error.
+
+### 12. Every Bedrock model blocked · 🔴 Blocker
+- **Tried:** use Bedrock after adding a payment method.
+- **Steps:** checked model access and called Claude and Amazon Nova.
+- **Expected:** access. **Got:** `NOT_AUTHORIZED` for every model and "Operation not allowed" on calls.
+- **Workaround:** support case (Bedrock Allowlisting), opened Oct 10 and still open on Oct 19. The AI code ships with a fallback, so the game works without it.
+- **Suggestion:** show the block and a request link in the Bedrock console, with an expected timeline.
+
+### 13. CloudFront and Fargate refuse to deploy · 🟠 Major
+- **Tried:** deploy our CDK stack (CloudFront in front of Fargate).
+- **Steps:** `cdk deploy`, then again without CloudFront.
+- **Expected:** a running service. **Got:** "account must be verified" (CloudFront), then "account is currently blocked" (Fargate); both rolled back.
+- **Workaround:** made CloudFront optional; added these blocks to the same support case.
+- **Suggestion:** show account gates on the console home page of new accounts, with one request covering them all.
+
+### 14. No storage library for this OS version · 🟠 Major
+- **Tried:** save the TV's room so a relaunch can offer "Resume room".
+- **Steps:** installed the Vega async-storage port and built.
+- **Expected:** it works. **Got:** the build prints ERROR, `vega project install` says "not in profile", and the device doesn't have it.
+- **Workaround:** the TV keeps the room in memory, so Resume survives only while the app is open.
+- **Suggestion:** list a supported storage option for each OS version.
+
+### 15. Screens rendered twice the size · 🟡 Minor
+- **Tried:** build TV screens from the 1920×1080 Figma frames.
+- **Steps:** used the Figma pixel sizes in styles.
+- **Expected:** 1:1. **Got:** layout uses 960×540 units on a 1080p screen, so everything overflowed.
+- **Workaround:** one style helper scales every size.
+- **Suggestion:** state the layout unit next to the 1920×1080 design guidance.
+
+### 16. JS log tag isn't documented · ⚪ Note
+- **Tried:** find the app's JavaScript logs while debugging a frozen screen.
+- **Steps:** streamed device logs and searched for `ReactNativeJS`, the usual React Native tag.
+- **Expected:** our logs. **Got:** nothing under that tag. JS output is tagged `[KeplerScript-JavaScript]`; we also had a code path that didn't log at all (our bug).
+- **Workaround:** search for the right tag; added counters to the client.
+- **Suggestion:** document the tag in the debugging guide.
+
+### 17. Some WebSocket messages arrive garbled · 🔴 Blocker
+- **Tried:** push live screens (0.5–3 KB JSON) from the server to the TV.
+- **Steps:** played rounds with bots, counted dropped messages, and showed parse errors on screen.
+- **Expected:** every message intact. **Got:** some arrived garbled (`JSON Parse error: Unexpected character: T`). A 3 KB message failed every time; 1.5 KB ones failed sometimes when sent right after another message. The TV froze on an old screen, and the bug hid whenever logging changed the timing.
+- **Workaround:** when a message can't be read, the TV re-fetches the current screen over HTTP, and reconnects if that fails too.
+- **Suggestion:** fix how the Vega WebSocket rebuilds messages that span network packets.

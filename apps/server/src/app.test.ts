@@ -20,9 +20,9 @@ describe('session service skeleton', () => {
     (await app.inject({method: 'POST', url: '/api/rooms', payload: {clientInstallId: 'install-12345678'}})).json();
 
   it('serves demo poster art', async () => {
-    const res = await app.inject('/art/demo-0001.png');
+    const res = await app.inject('/art/demo-0001.jpg');
     expect(res.statusCode).toBe(200);
-    expect(res.headers['content-type']).toBe('image/png');
+    expect(res.headers['content-type']).toBe('image/jpeg');
   });
 
   it('serves the TV sound effects as AAC', async () => {

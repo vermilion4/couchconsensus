@@ -1,7 +1,7 @@
 """Builds the CouchConsensus logo files as clean SVG (all text outlined, no font needed).
 
-The mark: a fanned stack of three cards, the deck everyone swipes, with the top card
-in Fire TV orange carrying a "cc" monogram set in Bricolage Grotesque ExtraBold.
+The mark: "The Couch" (Figma option 1), three people on one sofa in voter colours; the
+sofa is Fire TV orange with Ember cushions. The wordmark is Bricolage Grotesque ExtraBold.
 
 Usage (needs uharfbuzz + fonttools):
     python design/brand/build_logo.py
@@ -97,22 +97,28 @@ def text_left(text: str, size: float, x: float, cy: float, fill: str, tracking=0
 
 
 # ---------- the mark ----------
+# "The Couch" (Figma, Logos page, option 1): three people on one sofa, in voter colours.
+# Shapes in Figma's 560-frame coordinates; the ink box is x 116..444, y 104..384.
 
-CARD_W, CARD_H, CARD_R = 220, 300, 34
-# (center x, center y, rotation°) of back, middle and top card in a 512 box
-CARDS = ((226, 268, -14), (240, 258, -5), (272, 250, 9))
+TEAL = "#2EC4B6"
+VIOLET = "#9B8CFF"
+
+HEADS = ((200, 152, 32, TEAL), (280, 142, 38, GLOW), (360, 152, 32, VIOLET))  # cx, cy, r, colour
+COUCH = (  # x, y, w, h, radius, colour; drawn in this order
+    (150, 168, 260, 124, 36, ORANGE),  # backrest
+    (164, 262, 232, 78, 24, EMBER),  # seat
+    (116, 222, 72, 140, 32, ORANGE),  # arm left
+    (372, 222, 72, 140, 32, ORANGE),  # arm right
+    (140, 356, 22, 28, 6, ORANGE),  # leg left
+    (398, 356, 22, 28, 6, ORANGE),  # leg right
+    (239, 262, 6, 78, 0, ORANGE),  # cushion seam 1
+    (315, 262, 6, 78, 0, ORANGE),  # cushion seam 2
+)
+INK = (116, 104, 444, 384)
 
 
 def mark_bounds() -> tuple[float, float, float, float]:
-    """Exact ink bounds of the three rotated cards (ignores corner rounding: < 1 % error)."""
-    xs, ys = [], []
-    for cx, cy, a in CARDS:
-        t = math.radians(a)
-        for dx, dy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
-            x, y = dx * CARD_W / 2, dy * CARD_H / 2
-            xs.append(cx + x * math.cos(t) - y * math.sin(t))
-            ys.append(cy + x * math.sin(t) + y * math.cos(t))
-    return min(xs), min(ys), max(xs), max(ys)
+    return INK
 
 
 def place(cx: float, cy: float, height: float, **kw) -> str:
@@ -127,37 +133,26 @@ def mark_width(height: float) -> float:
     return (x1 - x0) * height / (y1 - y0)
 
 
-def card(cx: float, cy: float, angle: float, fill: str, inner: str = "") -> str:
-    return (
-        f'<g transform="translate({cx:.2f} {cy:.2f}) rotate({angle})">'
-        f'<rect x="{-CARD_W / 2}" y="{-CARD_H / 2}" width="{CARD_W}" height="{CARD_H}" rx="{CARD_R}" fill="{fill}"/>'
-        f"{inner}</g>"
-    )
+def _rect(x, y, w, h, r, fill):
+    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{r}" fill="{fill}"/>'
 
 
 def mark(scale: float = 1.0, tx: float = 0, ty: float = 0, mono: str | None = None, back: str = CUSHION) -> str:
-    """The card stack in a 512×512 box. mono: one-color version with the monogram knocked out."""
-    (bx, by, ba), (mx, my, ma), (tx_, ty_, ta) = CARDS
+    """The couch with three heads. mono: one colour, with the cushion seams and a thin ring around
+    each head cut out so the shapes still read on any background."""
     if not mono:
-        body = (
-            card(bx, by, ba, back)
-            + card(mx, my, ma, EMBER)
-            + card(tx_, ty_, ta, ORANGE, text_centered("cc", 150, 0, -6, NIGHT))
-        )
+        body = "".join(_rect(*c) for c in COUCH) + "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{f}"/>' for x, y, r, f in HEADS)
     else:
-        # The monogram is cut through the whole stack so nothing shows through it,
-        # and each lower card is a lighter tint of the same color so the fan still reads.
         cut = (
-            f'<mask id="cc-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">'
-            f'<rect width="512" height="512" fill="white"/>'
-            f'<g transform="translate({tx_} {ty_}) rotate({ta})">{text_centered("cc", 150, 0, -6, "black")}</g></mask>'
+            '<mask id="couch-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="560" height="560">'
+            '<rect width="560" height="560" fill="white"/>'
+            + "".join(f'<circle cx="{x}" cy="{y}" r="{r + 7}" fill="black"/>' for x, y, r, _ in HEADS)
+            + _rect(239, 262, 6, 78, 0, "black") + _rect(315, 262, 6, 78, 0, "black")
+            + '<rect x="164" y="258" width="232" height="6" fill="black"/></mask>'
         )
-        body = (
-            f'{cut}<g mask="url(#cc-cut)">'
-            f'<g opacity="0.4">{card(bx, by, ba, mono)}</g>'
-            f'<g opacity="0.7">{card(mx, my, ma, mono)}</g>'
-            f'{card(tx_, ty_, ta, mono)}</g>'
-        )
+        couch = "".join(_rect(x, y, w, h, r, mono) for x, y, w, h, r, _ in COUCH[:6])
+        heads = "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{mono}"/>' for x, y, r, _ in HEADS)
+        body = f'{cut}<g mask="url(#couch-cut)">{couch}</g>{heads}'
     return f'<g transform="translate({tx:.2f} {ty:.2f}) scale({scale:.4f})">{body}</g>'
 
 

@@ -1,4 +1,4 @@
-import {existsSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {describe, expect, it} from 'vitest';
 import {loadDemoCatalog} from './demo';
@@ -54,10 +54,12 @@ describe('demo catalog', () => {
     }
   });
 
-  it('has an original poster file for every title', () => {
+  it('has a poster file for every title, each photo credited', () => {
+    const credits = readFileSync(ART_DIR + 'CREDITS.md', 'utf8');
     for (const t of cat.titles) {
-      expect(t.posterPath).toMatch(/^\/art\/demo-\d{4}\.png$/);
+      expect(t.posterPath).toMatch(/^\/art\/demo-\d{4}\.jpg$/);
       expect(existsSync(ART_DIR + t.posterPath.replace('/art/', '')), t.posterPath).toBe(true);
+      expect(credits, t.title).toContain(`| ${t.title} |`);
     }
   });
 });

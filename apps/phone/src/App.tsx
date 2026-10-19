@@ -25,7 +25,9 @@ export function App() {
     return (
       <main class="screen">
         <h1>CouchConsensus</h1>
-        <p class="muted">Scan the QR code on the TV to join a room.</p>
+        <p class="body" style={{marginTop: 16}}>
+          Scan the QR code on the TV to join a room.
+        </p>
       </main>
     );
   if (problem === 'full') return <RoomFull roomCode={roomCode} onRetry={() => setProblem(undefined)} />;
@@ -74,19 +76,16 @@ function Join(props: {roomCode: string; notFound: boolean; onSeat: (s: Seat) => 
     }
   };
 
-  if (props.notFound)
-    return (
-      <main class="screen">
-        <p class="eyebrow">Room {props.roomCode}</p>
-        <h1>That room isn't open</h1>
-        <p class="muted">Check the 4 letters on the TV. Rooms close after 24 hours or when the host ends them.</p>
-      </main>
-    );
+  if (props.notFound) return <NotFound roomCode={props.roomCode} />;
 
   return (
-    <main class="screen">
+    <main class="screen join">
       <p class="eyebrow">Room {props.roomCode}</p>
-      <h1>What should we call you?</h1>
+      <h1>
+        What should we
+        <br />
+        call you?
+      </h1>
       <form onSubmit={submit}>
         <input
           value={name}
@@ -98,25 +97,68 @@ function Join(props: {roomCode: string; notFound: boolean; onSeat: (s: Seat) => 
           aria-label="Your name"
           aria-invalid={error ? 'true' : undefined}
         />
-        <p class={error ? 'error small' : 'muted small'}>{error ?? 'Up to 12 characters. Everyone in the room sees it.'}</p>
+        <p class={error ? 'hint error' : 'hint'}>{error ?? 'Up to 12 characters. Everyone in the room sees it.'}</p>
         <button type="submit" class="primary" disabled={busy}>
           {busy ? 'Joining…' : 'Join'}
         </button>
       </form>
-      <p class="muted small footer">No app, no account. Your votes stay private.</p>
+      <p class="note">No app, no account. Your votes stay private.</p>
+    </main>
+  );
+}
+
+/** Figma "Phone / Room not found": fix the code right here instead of rescanning. */
+function NotFound({roomCode}: {roomCode: string}) {
+  const [code, setCode] = useState(roomCode);
+  const go = (e: Event) => {
+    e.preventDefault();
+    const next = code.trim().toUpperCase();
+    if (RoomCode.safeParse(next).success) location.assign(`/r/${next}`);
+  };
+  return (
+    <main class="screen join">
+      <p class="eyebrow">Join a room</p>
+      <h1>
+        That room
+        <br />
+        isn't open
+      </h1>
+      <form onSubmit={go}>
+        <input
+          value={code}
+          onInput={e => setCode((e.target as HTMLInputElement).value.toUpperCase())}
+          maxLength={4}
+          autoCapitalize="characters"
+          autoComplete="off"
+          aria-label="Room code"
+          aria-invalid="true"
+        />
+        <p class="hint error" style={{whiteSpace: 'nowrap'}}>
+          No room with code {roomCode}. Check the 4 letters on the TV.
+        </p>
+        <button type="submit" class="primary">
+          Join room
+        </button>
+      </form>
+      <p class="note">Rooms close after 24 hours or when the host ends them.</p>
     </main>
   );
 }
 
 function RoomFull({roomCode, onRetry}: {roomCode: string; onRetry: () => void}) {
   return (
-    <main class="screen">
+    <main class="screen full">
       <p class="eyebrow">Room {roomCode}</p>
-      <h1>This room is full</h1>
-      <p class="muted">A room holds up to 8 people, and all the seats are taken. Ask the host to start a new room when this round ends.</p>
+      <h1>
+        This room
+        <br />
+        is full
+      </h1>
+      <p class="body">A room holds up to 8 people, and all the seats are taken. Ask the host to start a new room when this round ends.</p>
       <button class="primary" onClick={onRetry}>
         Try again
       </button>
+      <p class="note">No app, no account. Your votes stay private.</p>
     </main>
   );
 }
@@ -140,7 +182,7 @@ function Room({roomCode, seat, onLost}: {roomCode: string; seat: Seat; onLost: (
     return (
       <main class="screen">
         {banner}
-        <p class="muted">Connecting…</p>
+        <p class="body">Connecting…</p>
       </main>
     );
 

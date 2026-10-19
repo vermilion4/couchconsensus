@@ -72,6 +72,8 @@ export const VoterView = z.object({
   me: z.object({
     id: VoterId,
     nickname: z.string(),
+    /** My place among seated voters; picks my colour, the same one the TV shows (theme voterColor). */
+    colorIndex: z.number().int().nonnegative().optional(),
     mood: z.object({chips: z.array(MoodChip), text: MoodText.optional(), skipped: z.boolean()}).optional(),
     ballot: z
       .object({
@@ -91,6 +93,8 @@ export const VoterView = z.object({
       deck: z.array(TitleCard),
       allowVeto: z.boolean(),
       allowSuperYes: z.boolean(),
+      /** Who has finished (by colour), for the waiting screen. No names, no votes. */
+      progress: z.array(z.object({colorIndex: z.number().int().nonnegative(), finished: z.boolean()})).optional(),
     })
     .optional(),
   result: z

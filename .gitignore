@@ -17,5 +17,10 @@ spikes/s3-bedrock/results*.json
 infra/cdk.context.json
 .venv/
 
-# testreel recordings (apps/demo)
-demo
+# Local tool output (code graph, Kepler ESLint cache)
+graphify-out/
+generated/
+
+# Private
+apps/demo/
+brag-output/

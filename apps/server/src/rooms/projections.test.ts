@@ -73,6 +73,21 @@ describe('TV projection', () => {
 });
 
 describe('voter projection', () => {
+  it('gives my colour (seat order, as on the TV) and who has finished, without names or votes', () => {
+    const r = room();
+    apply(r, HOST, cmd('startRound'), ctx);
+    const n = r.rounds[0]!.deck.length;
+    for (let i = 0; i < n; i++) vote(r, 'ada', 'no');
+    const view = projectVoter(r, id('ada'), ctx);
+    expect(VoterView.parse(view)).toEqual(view);
+    expect(view.me.colorIndex).toBe(1);
+    expect(view.round?.progress).toEqual([
+      {colorIndex: 0, finished: false},
+      {colorIndex: 1, finished: true},
+    ]);
+    expect(JSON.stringify(view.round?.progress)).not.toMatch(/Sam|sam|Ada|ada|no/);
+  });
+
   it('matches the protocol schema and carries only my own votes', () => {
     const r = room();
     apply(r, HOST, cmd('startRound'), ctx);

@@ -38,8 +38,12 @@ export function Mood({client, view, onDone}: {client: RoomClient; view: VoterVie
   return (
     <main class="screen">
       <p class="eyebrow">Room {view.roomCode}</p>
-      <h1>What are you in the mood for?</h1>
-      <p class="muted small">Pick up to three. The room's moods shape the deck.</p>
+      <h1>
+        What are you in
+        <br />
+        the mood for?
+      </h1>
+      <p class="sub">Pick up to three. The room's moods shape the deck.</p>
       <div class="chips" role="group" aria-label="Moods">
         {CHIPS.map(([id, label]) => (
           <button key={id} class={chips.includes(id) ? 'chip on' : 'chip'} aria-pressed={chips.includes(id)} onClick={() => toggle(id)}>
@@ -47,12 +51,12 @@ export function Mood({client, view, onDone}: {client: RoomClient; view: VoterVie
           </button>
         ))}
       </div>
-      <label class="muted small" for="mood-text">
+      <label class="label" for="mood-text">
         Or say it your way
       </label>
       <input id="mood-text" value={text} maxLength={80} placeholder="something with a heist" onInput={e => setText((e.target as HTMLInputElement).value)} />
-      {error && <p class="error small">{error}</p>}
-      <div class="footer stack">
+      {error && <p class="hint error">{error}</p>}
+      <div class="actions">
         <button class="primary" disabled={busy || (chips.length === 0 && !text.trim())} onClick={() => submit(false)}>
           Continue
         </button>
@@ -69,10 +73,10 @@ export function Lobby({view, onChangeMood}: {view: VoterView; onChangeMood: () =
     <main class="screen center">
       <p class="eyebrow">Room {view.roomCode}</p>
       <h1>You're in, {view.me.nickname}.</h1>
-      <p class="muted">
+      <p class="body" style={{marginTop: 16}}>
         {view.roomSize} {view.roomSize === 1 ? 'person is' : 'people are'} here. The host starts the round from the TV.
       </p>
-      <button class="text" onClick={onChangeMood}>
+      <button class="text" style={{marginTop: 28}} onClick={onChangeMood}>
         Change my mood
       </button>
     </main>

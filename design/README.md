@@ -4,13 +4,13 @@ Oct 10, 2026. Figma file **Couch Consensus** has three pages (Starter plan limit
 
 ## Brand
 
-- **Logo: Swipe Stack.** A fanned stack of three cards (the deck everyone swipes), top card in Fire TV orange with a `cc` monogram set in Bricolage Grotesque ExtraBold.
+- **Logo: The Couch** (Figma Logos page, option 1). Three people on one sofa in voter colours (teal, glow, violet); the sofa is Fire TV orange with Ember cushions. Wordmark in Bricolage Grotesque ExtraBold. Replaced the earlier Swipe Stack mark on Oct 19.
 - **Source of truth: [`brand/build_logo.py`](brand/build_logo.py).** It writes clean SVGs with every glyph converted to outlines (kerned with HarfBuzz), so no font is needed to display them. [`brand/render.mjs`](brand/render.mjs) renders the PNGs.
 
 | File | Use |
 | --- | --- |
-| `brand/svg/mark.svg` | The card stack alone, transparent |
-| `brand/svg/mark-mono-glow.svg`, `mark-mono-orange.svg` | One-color versions (monogram knocked out) for tiny or single-color use |
+| `brand/svg/mark.svg` | The couch mark alone, transparent |
+| `brand/svg/mark-mono-glow.svg`, `mark-mono-orange.svg` | One-colour versions (seams and head outlines cut out) for tiny or single-colour use |
 | `brand/svg/app-icon.svg` → `png/app-icon-512.png` | App icon; copied to `apps/tv/assets/image/icon.png` (Vega manifest needs 512×512 PNG) |
 | `brand/svg/tv-tile.svg` → `png/tv-tile-1280.png` | Fire TV launcher tile, 1280×720, no transparency, lockup inside the 882×448 safe area |
 | `brand/svg/lockup-horizontal.svg` | Mark + wordmark, for dark backgrounds |

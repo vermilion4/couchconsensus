@@ -72,3 +72,12 @@ export const regionName = (code: string): string => REGIONS[code] ?? code;
 
 export const tossLede = (n: number): string =>
   `${n === 2 ? 'Two' : n} titles tied on every rule. The referee flips a coin.`;
+
+/** Display size for the verdict title: Figma's 160 px fits about 14 characters in two lines. */
+export const verdictTitleSize = (title: string): number => (title.length <= 14 ? 160 : title.length <= 20 ? 120 : 96);
+
+/** Tied titles share every count, so the verdict's stats describe each finalist. */
+export function tossMeta(stats: {yes: number; superYes: number; voters?: number; unanimous?: boolean}): string {
+  if (stats.yes === 0) return 'No yes votes';
+  return stats.superYes ? `${stats.yes} yes, ${stats.superYes} super-yes` : `${stats.yes} yes`;
+}

@@ -163,7 +163,7 @@ export async function buildApp(config: Config, roomManager?: RoomManager): Promi
       immutable: true,
     });
   } else {
-    app.log.warn(`Poster art not found (${config.artDir}); run "node packages/catalog/scripts/build-posters.mjs"`);
+    app.log.warn(`Poster art not found (${config.artDir}); run "node packages/catalog/scripts/build-photo-posters.mjs <cacheDir>"`);
   }
 
   // ---------- TV sound effects (original, TV-8); the TV fetches and plays them through MediaSource ----------

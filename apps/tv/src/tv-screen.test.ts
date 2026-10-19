@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {TvView} from '@couch/protocol';
-import {lobbyHint, progressLabel, regionName, rulesChips, runtimeLabel, tossLede, tvScreenFor} from './tv-screen';
+import {lobbyHint, progressLabel, regionName, rulesChips, runtimeLabel, tossLede, tossMeta, tvScreenFor, verdictTitleSize} from './tv-screen';
 
 const base: TvView = {
   audience: 'tv',
@@ -91,5 +91,21 @@ describe('tossLede', () => {
   it('counts the tied titles, so a five-way sudden-death tie reads right', () => {
     expect(tossLede(2)).toBe('Two titles tied on every rule. The referee flips a coin.');
     expect(tossLede(5)).toBe('5 titles tied on every rule. The referee flips a coin.');
+  });
+});
+
+describe('verdictTitleSize', () => {
+  it('uses Figma\'s 160 px for short titles and steps down so long ones stay within two lines', () => {
+    expect(verdictTitleSize('Pancake Heist')).toBe(160);
+    expect(verdictTitleSize('Snow Globe Holiday')).toBe(120);
+    expect(verdictTitleSize('Wolves of the Frozen Pass')).toBe(96);
+  });
+});
+
+describe('tossMeta', () => {
+  it('describes the tied votes, which every finalist shares', () => {
+    expect(tossMeta({voters: 5, yes: 4, superYes: 1, unanimous: false})).toBe('4 yes, 1 super-yes');
+    expect(tossMeta({voters: 5, yes: 2, superYes: 0, unanimous: false})).toBe('2 yes');
+    expect(tossMeta({voters: 4, yes: 0, superYes: 0, unanimous: false})).toBe('No yes votes');
   });
 });

@@ -1,5 +1,6 @@
-// Generates original poster art for the demo deck (SV-6: no third-party artwork).
-// One flat motif per primary genre, varied per title; title set in Bricolage Grotesque.
+// Offline fallback poster art for the demo deck (SV-6: no third-party artwork): one flat motif per
+// primary genre, title set in Bricolage Grotesque. The shipped posters are photo posters
+// (build-photo-posters.mjs); point posterPath at the .png files to use these instead.
 // Usage: node packages/catalog/scripts/build-posters.mjs   → packages/catalog/art/demo-NNNN.png
 import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -128,6 +129,6 @@ for (const t of deck.titles) {
   <text x="30" y="${H - 19}" font-family="Figtree" font-weight="600" font-size="18" fill="${GLOW}">${t.year}  ·  ${t.runtimeMin} min</text>
 </svg>`;
   const png = new Resvg(svg, {font: {fontFiles: fonts, loadSystemFonts: false, defaultFontFamily: 'Figtree'}}).render().asPng();
-  writeFileSync(new URL(t.posterPath.replace('/art/', ''), out), png);
+  writeFileSync(new URL(t.posterPath.replace('/art/', '').replace(/\.\w+$/, '.png'), out), png);
 }
 console.log(`wrote ${deck.titles.length} posters to packages/catalog/art/`);
